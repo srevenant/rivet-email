@@ -32,6 +32,10 @@ defmodule Rivet.Email.MixProject do
 
   def application do
     [
+      env: [
+        enabled: false,
+        sender: Rivet.Email.Example
+      ],
       extra_applications: [:logger, :timex, {:ex_unit, :optional}]
     ]
   end
