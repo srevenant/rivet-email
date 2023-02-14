@@ -19,8 +19,6 @@ defmodule Rivet.Email do
       @mailer Keyword.get(opts, :mailer)
       require Logger
 
-      @enabled Application.compile_env!(@app, :enabled)
-
       @type email_model() :: @email_model.t()
       @type user_model() :: @user_model.t()
       @type user_id() :: String.t()
@@ -73,17 +71,15 @@ defmodule Rivet.Email do
       end
 
       ##########################################################################
-      if @enabled do
-        def send_email(%Bamboo.Email{to: addr, subject: subj} = email) do
+      def send_email(%Bamboo.Email{to: addr, subject: subj} = email) do
+        if Application.fetch_env!(@app, :enabled) do
           if String.contains?("@example.com", addr) do
             Logger.warn("Not delivering email to example email #{addr}")
             log_email(email)
           else
             @mailer.deliver_later(email)
           end
-        end
-      else
-        def send_email(%Bamboo.Email{to: addr, subject: subj} = email) do
+        else
           Logger.warn("Email disabled, not sending message to #{addr}", subject: subj)
           log_email(email)
         end
