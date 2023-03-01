@@ -72,7 +72,7 @@ defmodule Rivet.Email do
 
       ##########################################################################
       def send_email(%Bamboo.Email{to: addr, subject: subj} = email) do
-        if Application.fetch_env!(@app, :enabled) do
+        if Application.fetch_env!(@app, :email).enabled do
           if String.contains?("@example.com", addr) do
             Logger.warn("Not delivering email to example email #{addr}")
             log_email(email)
