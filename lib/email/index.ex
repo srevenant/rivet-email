@@ -19,8 +19,6 @@ defmodule Rivet.Email do
       @mailer Keyword.get(opts, :mailer)
       require Logger
 
-      @enabled Application.compile_env!(@app, :enabled)
-
       @type email_model() :: @email_model.t()
       @type user_model() :: @user_model.t()
       @type user_id() :: String.t()
@@ -33,7 +31,7 @@ defmodule Rivet.Email do
       end
 
       defp send_all([recip | rest], template, opts) do
-        with :ok <- deliver(recip, template, opts) do
+        with {:ok, _} <- deliver(recip, template, opts) do
           send_all(rest, template, opts)
         end
       end
@@ -57,7 +55,7 @@ defmodule Rivet.Email do
       end
 
       ##########################################################################
-      @spec deliver(recipient :: any(), template :: atom(), opts :: map()) :: Bamboo.Email.t()
+      @spec deliver(recipient :: any(), template :: atom(), opts :: map()) :: {:ok, Bamboo.Email.t()} | {:error, term()}
       def deliver(%@email_model{} = recipient, template, opts) do
         case template.generate(recipient, opts) do
           {:ok, subject, body} ->
@@ -73,19 +71,19 @@ defmodule Rivet.Email do
       end
 
       ##########################################################################
-      if @enabled do
-        def send_email(%Bamboo.Email{to: addr, subject: subj} = email) do
+      def send_email(%Bamboo.Email{to: addr, subject: subj} = email) do
+        if Application.fetch_env!(:rivet_email, :enabled) do
           if String.contains?("@example.com", addr) do
             Logger.warn("Not delivering email to example email #{addr}")
             log_email(email)
+            {:ok, email}
           else
             @mailer.deliver_later(email)
           end
-        end
-      else
-        def send_email(%Bamboo.Email{to: addr, subject: subj} = email) do
+        else
           Logger.warn("Email disabled, not sending message to #{addr}", subject: subj)
           log_email(email)
+          {:ok, email}
         end
       end
 
@@ -102,7 +100,7 @@ defmodule Rivet.Email do
 
       ##########################################################################
       # future: opts can include verfied: true (or some way to only send to verified addresses)
-      @spec get_emails(email_recipient() | list(email_recipient)) :: {:ok, list(email_model())}
+      @spec get_emails(email_recipient() | list(email_recipient)) :: {:ok, list(email_model())} | {:error, String.t(), term()}
 
       def get_emails(recip, out \\ [])
 
