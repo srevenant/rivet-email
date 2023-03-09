@@ -20,7 +20,7 @@ defmodule Rivet.Email.Template do
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Rivet.Email.Template
-      @mailer Application.compile_env!(:rivet_email, :module)
+      @mailer Application.compile_env!(:rivet_email, :mailer)
     end
   end
 end

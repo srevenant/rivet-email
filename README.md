@@ -11,9 +11,8 @@ A simple to use templated email system as part of the [Rivets Framework](https:/
 Usage steps (see examples that follow for more detail):
 
 1. Configure Rivet Email (see `config/config.exs` for an example of supported configurations).
-2. Create Mailer and Email modules as well as one or more templates
-3. Send email, where `recips` can be a single or list of
-   `user_model`, `email_model` or an ID for a `user_model`:
+2. Create Mailer and Email modules as well as one or more templates (see `lib/email/examples`).
+3. Send email, where `recips` can be a single or list of `user_model`, `email_model` or an ID for a `user_model`:
 
 ```elixir
 MyEmail.send(recips, MyEmailTemplate)
@@ -28,7 +27,7 @@ end
 ```
 
 ```elixir
-defmodule MyEmailMailer do
+defmodule MyEmail do
   use Rivet.Email,
     otp_app: :app_name_here,
     backend: MyEmailBackend,
@@ -37,9 +36,17 @@ defmodule MyEmailMailer do
 end
 ```
 
+Config:
+
+```elixir
+config :rivet_email,
+  enabled: true,
+  mailer: MyEmail
+```
+
 ## Template
 
-The template is a generate() function, which accepts the recipient as a UserEmailStruct,
+The template defines a generate() function, which accepts the recipient as a UserEmailStruct,
 and attributes as a map. Attributes come from the configuration
 
 ```elixir
