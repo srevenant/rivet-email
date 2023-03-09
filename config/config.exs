@@ -17,7 +17,7 @@ config :rivet_email, Core.Email.BambooMailer,
 # mail sender (the Rivet.Email module)
 config :rivet_email,
   enabled: false,
-  mailer: Rivet.Email.Example
+  mailer: nil
 
 # this is where you define common things used in templates
 config :rivet_email, :email,

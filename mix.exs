@@ -36,7 +36,7 @@ defmodule Rivet.Email.MixProject do
     ]
   end
 
-  defp elixirc_paths(:test), do: ["example", "lib", "test/support"]
+  defp elixirc_paths(:test), do: ["lib", "test/lib"]
   defp elixirc_paths(_), do: ["lib"]
 
   defp deps do
@@ -63,7 +63,7 @@ defmodule Rivet.Email.MixProject do
 
   defp package() do
     [
-      files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
+      files: ~w(lib .formatter.exs mix.exs README* LICENSE* test/lib),
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/srevenant/rivet-email"},
       source_url: "https://github.com/srevenant/rivet-email"
