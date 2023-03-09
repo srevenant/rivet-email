@@ -39,19 +39,19 @@ defmodule Rivet.Email.MixProject do
   defp elixirc_paths(:test), do: ["example", "lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      # please alphabetize
       {:bamboo, "~> 1.4"},
       {:bamboo_smtp, "~> 2.1.0"},
-      {:jason, "~> 1.0"},
-      {:timex, "~> 3.6"},
-      {:html_sanitize_ex, "~> 1.4"},
-      {:excoveralls, "~> 0.14", only: :test, runtime: false},
-      {:ex_machina, "~> 2.7.0", only: :test, runtime: false},
-      {:faker, "~> 0.10", only: :test, runtime: false},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:mix_test_watch, "~> 0.8", only: [:dev, :test], runtime: false}
+      {:ex_machina, "~> 2.7.0", only: :test, runtime: false},
+      {:excoveralls, "~> 0.14", only: :test, runtime: false},
+      {:faker, "~> 0.10", only: :test, runtime: false},
+      {:html_sanitize_ex, "~> 1.4"},
+      {:jason, "~> 1.0"},
+      {:mix_test_watch, "~> 0.8", only: [:dev, :test], runtime: false},
+      {:timex, "~> 3.6"}
     ]
   end
 

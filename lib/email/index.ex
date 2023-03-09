@@ -55,7 +55,8 @@ defmodule Rivet.Email do
       end
 
       ##########################################################################
-      @spec deliver(recipient :: any(), template :: atom(), opts :: map()) :: {:ok, Bamboo.Email.t()} | {:error, term()}
+      @spec deliver(recipient :: any(), template :: atom(), opts :: map()) ::
+              {:ok, Bamboo.Email.t()} | {:error, term()}
       def deliver(%@email_model{} = recipient, template, opts) do
         case template.generate(recipient, opts) do
           {:ok, subject, body} ->
@@ -100,7 +101,8 @@ defmodule Rivet.Email do
 
       ##########################################################################
       # future: opts can include verfied: true (or some way to only send to verified addresses)
-      @spec get_emails(email_recipient() | list(email_recipient)) :: {:ok, list(email_model())} | {:error, String.t(), term()}
+      @spec get_emails(email_recipient() | list(email_recipient)) ::
+              {:ok, list(email_model())} | {:error, String.t(), term()}
 
       def get_emails(recip, out \\ [])
 

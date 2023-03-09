@@ -55,7 +55,7 @@ defmodule Myapp.Email.AuthErrorTemplate do
   #   AuthErrorTemplate.send(recipients)
   def send(recip) do
     # gather attributes
-    @emailer.send(recip, __MODULE__, attrib1: value, ...)
+    @mailer.send(recip, __MODULE__, attrib1: value, ...)
   end
 end
 ```
