@@ -13,10 +13,10 @@ defmodule Rivet.Email do
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
-      @user_model Keyword.get(opts, :user_model)
-      @email_model Keyword.get(opts, :email_model)
+      @user_model Keyword.get(opts, :user_model, Rivet.Ident.User)
+      @email_model Keyword.get(opts, :email_model, Rivet.Ident.Email)
       @app Keyword.get(opts, :otp_app)
-      @mailer Keyword.get(opts, :mailer)
+      @backend Keyword.get(opts, :backend)
       require Logger
 
       @type email_model() :: @email_model.t()
@@ -78,7 +78,7 @@ defmodule Rivet.Email do
             log_email(email)
             {:ok, email}
           else
-            @mailer.deliver_later(email)
+            @backend.deliver_later(email)
           end
         else
           Logger.warn("Email disabled, not sending message to #{addr}", subject: subj)

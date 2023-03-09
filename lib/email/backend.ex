@@ -1,6 +1,6 @@
-defmodule Rivet.Email.Mailer do
+defmodule Rivet.Email.Backend do
   @moduledoc false
-  # exits just to abstract Bamboo, incase we want something differeint in the
+  # exits just to abstract Bamboo, incase we want something different in the
   # future
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do

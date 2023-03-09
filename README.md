@@ -1,6 +1,12 @@
 # Rivet Email
 
-A simple to use templated email system as part of the [Rivets Framework](https://docs.google.com/document/d/1ntoTA9YRE7KvKpmwZRtfzKwTZNgo2CY6YfJnDNQAlBc), using Bamboo mailer on the backend
+A simple to use templated email system as part of the [Rivets Framework](https://docs.google.com/document/d/1ntoTA9YRE7KvKpmwZRtfzKwTZNgo2CY6YfJnDNQAlBc). Key things to using this:
+
+* `Backend` — this is what we use for the actual heavy lifting. For now, using Bamboo mailer.
+* `Mailer` — the entrypoint/API used in other apps
+* *templates* — templates to handle messages
+* *config* — where you specify the Mailer module
+* *data structs* — uses Rivet.Ident.Email and Rivet.Ident.User, but anything can be subbed in
 
 Usage steps (see examples that follow for more detail):
 
@@ -16,18 +22,18 @@ MyEmail.send(recips, MyEmailTemplate)
 ## Rivet Mailer and Email modules
 
 ```elixir
-defmodule MyMailer do
+defmodule MyEmailBackend do
   use Rivet.Email.Mailer, otp_app: :app_name_here
 end
 ```
 
 ```elixir
-defmodule MyEmail do
+defmodule MyEmailMailer do
   use Rivet.Email,
     otp_app: :app_name_here,
-    user_model: UserStruct,
-    email_model: UserEmailStruct,
-    mailer: MyMailer
+    backend: MyEmailBackend,
+    user_model: Ident.User, # optional; shown with default
+    email_model: Ident.Email # optional; shown with default
 end
 ```
 
@@ -49,7 +55,7 @@ defmodule Myapp.Email.AuthErrorTemplate do
   #   AuthErrorTemplate.send(recipients)
   def send(recip) do
     # gather attributes
-    @sender.send(recip, __MODULE__, attrib1: value, ...)
+    @emailer.send(recip, __MODULE__, attrib1: value, ...)
   end
 end
 ```
