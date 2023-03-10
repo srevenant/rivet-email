@@ -1,9 +1,9 @@
-defmodule Rivet.Email.Test.Mailer do
+defmodule Rivet.Email.Example.Mailer do
   @moduledoc """
   This is an example of how to deploy Rivet Email, and is included so other
   projects may include it in their tests.
   """
-  alias Rivet.Email.Test.Mailer
+  alias Rivet.Email.Example.Mailer
 
   use Rivet.Email,
     otp_app: :rivet_email,

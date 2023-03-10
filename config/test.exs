@@ -4,7 +4,3 @@ import Config
 config :logger, level: :warn
 
 config :ex_unit, capture_log: true
-
-config :rivet_email, :email,
-  enabled: true,
-  mailer: Rivet.Email.Test.Mailer.Mailer

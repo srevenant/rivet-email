@@ -1,4 +1,4 @@
-defmodule Rivet.Email.Test.Mailer.User do
+defmodule Rivet.Email.Example.Mailer.User do
   defstruct id: "", name: "", emails: []
 
   def preload(e, _), do: {:ok, e}
@@ -8,7 +8,7 @@ defmodule Rivet.Email.Test.Mailer.User do
     %__MODULE__{
       id: "BOGUS000-fB40-4EEF-B352-307C280604C1",
       name: "Doctor Who",
-      emails: [Rivet.Email.Test.Mailer.Email.mock()]
+      emails: [Rivet.Email.Example.Mailer.Email.mock()]
     }
   end
 end

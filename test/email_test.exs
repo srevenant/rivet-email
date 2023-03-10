@@ -1,7 +1,7 @@
 defmodule Rivet.Email.Test do
   use ExUnit.Case
   import ExUnit.CaptureLog
-  alias Rivet.Email.Test.Mailer
+  alias Rivet.Email.Example.Mailer
 
   doctest Rivet.Email.Template, import: true
 

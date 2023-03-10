@@ -1,4 +1,4 @@
-defmodule Rivet.Email.Test.Mailer.Template do
+defmodule Rivet.Email.Example.Mailer.Template do
   @behaviour Rivet.Email.Template
 
   @impl Rivet.Email.Template
