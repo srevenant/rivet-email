@@ -20,7 +20,8 @@ defmodule Rivet.Email.Template do
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Rivet.Email.Template
-      @mailer Application.compile_env!(Rivet.Email, :mailer) # apply(Rivet.Email, :mailer, [])
+      # abstraction to hush warnings. dumb, but what we need to do
+      @mailer apply(Rivet.Email, :mailer, [])
     end
   end
 end
