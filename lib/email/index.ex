@@ -11,7 +11,7 @@ defmodule Rivet.Email do
   - `opts` (optional) is a dictionary with key/value attributes to use in the template
   """
 
-  def mailer(), do: Application.get_env(:rivet_email, :mailer)
+  # def mailer(), do: Application.get_env(:rivet_email, :mailer)
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
