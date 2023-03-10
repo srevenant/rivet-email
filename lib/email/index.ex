@@ -42,6 +42,7 @@ defmodule Rivet.Email do
 
       ##########################################################################
       defp get_cfg(opts) do
+        IO.inspect({@app, :email})
         {:ok,
          Application.get_env(@app, :email)
          |> Keyword.merge(opts)
