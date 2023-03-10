@@ -61,8 +61,9 @@ defmodule Myapp.Email.AuthErrorTemplate do
   # create a "send" function (optional), and then call it as:
   #   AuthErrorTemplate.send(recipients)
   def send(recip) do
-    # gather attributes
-    @mailer.send(recip, __MODULE__, attrib1: value, ...)
+    # gather attributes and do things here
+    # then send:
+    Rivet.Email.mailer().send(recip, __MODULE__, attrib1: value, ...)
   end
 end
 ```
