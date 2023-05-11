@@ -2,6 +2,17 @@ defmodule Rivet.Email.Template do
   @callback generate(recipient :: map(), attributes :: map()) ::
               {:ok, subject :: String.t(), html_body :: String.t()}
 
+  use TypedEctoSchema
+  use Rivet.Ecto.Model
+
+  typed_schema "email_templates" do
+    field(:name, :string)
+    field(:data, :string)
+    timestamps()
+  end
+
+  use Rivet.Ecto.Collection, update: [:data], unique_constraints: [:name]
+
   @doc ~S"""
   iex> html2text("<b>an html doc</b><p><h1>Header</h1>")
   "an html doc\r\n\r\n\r\n# Header\r\n"
@@ -20,6 +31,13 @@ defmodule Rivet.Email.Template do
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Rivet.Email.Template
+
+      def load(email_model, attr) do
+        with {:ok, template} <- Rivet.Email.Template.one([name: "#{__MODULE__}"]),
+             {:ok, %{subject: subject, body: html}} <- Rivet.Template.load_string(template.data, assigns: Map.put(attr, :email, email_model)) do
+          {:ok, subject, html}
+        end
+      end
     end
   end
 end
