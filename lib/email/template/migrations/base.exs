@@ -1,4 +1,4 @@
-defmodule Rivet.Email.Templates.Migrations.Base do
+defmodule Rivet.Email.Template.Migrations.Base do
   @moduledoc false
   use Ecto.Migration
 
