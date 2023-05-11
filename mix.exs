@@ -24,6 +24,10 @@ defmodule RivetEmail.MixProject do
         ignore_warnings: ".dialyzer_ignore.exs",
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
       ],
+      rivet: [
+        models_dir: "email",
+        app_base: Rivet.Email
+      ],
       aliases: [c: "compile"],
       package: package(),
       description: description()
