@@ -11,7 +11,7 @@ defmodule Rivet.Email.Template do
     timestamps()
   end
 
-  use Rivet.Ecto.Collection, update: [:data], unique_constraints: [:name]
+  use Rivet.Ecto.Collection, required: [:name], update: [:data], unique_constraints: [:name]
 
   @doc ~S"""
   iex> html2text("<b>an html doc</b><p><h1>Header</h1>")
