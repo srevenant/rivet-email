@@ -1,4 +1,4 @@
-defmodule Rivet.Email.MixProject do
+defmodule RivetEmail.MixProject do
   use Mix.Project
 
   def project do
