@@ -3,11 +3,11 @@ defmodule Rivet.Email.Template do
               {:ok, subject :: String.t(), html_body :: String.t()}
 
   @doc ~S"""
-  iex> text2html("<b>an html doc</b><p><h1>Header</h1>")
+  iex> html2text("<b>an html doc</b><p><h1>Header</h1>")
   "an html doc\r\n\r\n\r\n# Header\r\n"
   """
-  @spec text2html(html :: String.t()) :: text :: String.t()
-  def text2html(html) do
+  @spec html2text(html :: String.t()) :: text :: String.t()
+  def html2text(html) do
     # doesn't have to be pretty, very few will actually see it
     html
     |> String.replace(~r/<\s*h(.)\s*>/im, "\r\n\r\n# ", global: true)

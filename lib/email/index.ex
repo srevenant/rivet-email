@@ -65,7 +65,7 @@ defmodule Rivet.Email do
             Bamboo.Email.new_email(to: recipient.address, from: opts.email_from)
             |> Bamboo.Email.subject(subject)
             |> Bamboo.Email.html_body("<html><body>#{body}</body></html>")
-            |> Bamboo.Email.text_body(Rivet.Email.Template.text2html(body))
+            |> Bamboo.Email.text_body(Rivet.Email.Template.html2text(body))
             |> send_email()
 
           other ->
