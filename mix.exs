@@ -4,7 +4,7 @@ defmodule RivetEmail.MixProject do
   def project do
     [
       app: :rivet_email,
-      version: "1.0.3",
+      version: "1.0.4",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -55,7 +55,7 @@ defmodule RivetEmail.MixProject do
       {:html_sanitize_ex, "~> 1.4"},
       {:jason, "~> 1.0"},
       {:mix_test_watch, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:rivet, "~> 1.0", git: "https://github.com/srevenant/rivet", branch: "template", override: true},
+      {:rivet, "~> 1.0.6"},
       {:timex, "~> 3.6"},
       {:transmogrify, "~> 1.1.0"}
     ]
