@@ -2,6 +2,11 @@ import Config
 
 config :logger, level: :info
 
+config :rivet,
+  repo: Rivet.Email.Repo,
+  table_prefix: "",
+  test: true
+
 # this is where you define common things used in templates
 config :rivet_email, :email,
   link_front: "http://localhost:3000",
@@ -13,6 +18,7 @@ config :rivet_email, :email,
 # This is set in your app, to allow other things to know what you've named your
 # mail sender (the Rivet.Email module)
 config :rivet_email,
+  ecto_repos: [Rivet.Email.Repo],
   enabled: false,
   mailer: Rivet.Email.Example.Mailer
 
