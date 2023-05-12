@@ -1,23 +1,21 @@
 defmodule RivetEmail.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/srevenant/rivet-email"
   def project do
     [
       app: :rivet_email,
       version: "1.0.5",
+      package: package(),
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],
-      source_url: "https://github.com/srevenant/rivet-email",
-      docs: [
-        main: "Rivet.Email",
-        extras: ["README.md"]
-      ],
       preferred_cli_env: [
         coveralls: :test,
         "coveralls.detail": :test,
-        "coveralls.html": :test
+        "coveralls.html": :test,
+        dialyzer: :test
       ],
       deps: deps(),
       dialyzer: [
@@ -28,10 +26,11 @@ defmodule RivetEmail.MixProject do
         models_dir: "email",
         app_base: Rivet.Email
       ],
+      xref: [exclude: List.wrap(Application.get_env(:rivet, :repo))],
+      source_url: @source_url,
+      docs: [main: "Rivet.Email"],
       aliases: [c: "compile"],
-      package: package(),
-      description: description(),
-      xref: [exclude: List.wrap(Application.get_env(:rivet, :repo))]
+      description: description()
     ]
   end
 
@@ -50,6 +49,7 @@ defmodule RivetEmail.MixProject do
       {:bamboo, "~> 1.4"},
       {:bamboo_smtp, "~> 2.1.0"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:ex_machina, "~> 2.7.0", only: :test, runtime: false},
       {:excoveralls, "~> 0.14", only: :test, runtime: false},
       {:faker, "~> 0.10", only: :test, runtime: false},
@@ -72,8 +72,8 @@ defmodule RivetEmail.MixProject do
     [
       files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
       licenses: ["Apache-2.0"],
-      links: %{"GitHub" => "https://github.com/srevenant/rivet-email"},
-      source_url: "https://github.com/srevenant/rivet-email"
+      links: %{"GitHub" => @source_url},
+      source_url: @source_url
     ]
   end
 end

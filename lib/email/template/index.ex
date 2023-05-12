@@ -33,8 +33,11 @@ defmodule Rivet.Email.Template do
       @behaviour Rivet.Email.Template
 
       def load(email_model, attr) do
-        with {:ok, template} <- Rivet.Email.Template.one([name: "#{__MODULE__}"]),
-             {:ok, %{subject: subject, body: html}} <- Rivet.Template.load_string(template.data, assigns: Map.put(attr, :email, email_model)) do
+        with {:ok, template} <- Rivet.Email.Template.one(name: "#{__MODULE__}"),
+             {:ok, %{subject: subject, body: html}} <-
+               Rivet.Template.load_string(template.data,
+                 assigns: Map.put(attr, :email, email_model)
+               ) do
           {:ok, subject, html}
         end
       end
