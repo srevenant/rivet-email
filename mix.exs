@@ -4,7 +4,7 @@ defmodule RivetEmail.MixProject do
   def project do
     [
       app: :rivet_email,
-      version: "1.0.4",
+      version: "1.0.5",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -30,7 +30,8 @@ defmodule RivetEmail.MixProject do
       ],
       aliases: [c: "compile"],
       package: package(),
-      description: description()
+      description: description(),
+      xref: [exclude: List.wrap(Application.get_env(:rivet, :repo))]
     ]
   end
 
