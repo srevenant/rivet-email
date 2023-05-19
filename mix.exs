@@ -22,10 +22,6 @@ defmodule RivetEmail.MixProject do
         ignore_warnings: ".dialyzer_ignore.exs",
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
       ],
-      rivet: [
-        models_dir: "email",
-        app_base: Rivet.Email
-      ],
       xref: [exclude: List.wrap(Application.get_env(:rivet, :repo))],
       source_url: @source_url,
       docs: [main: "Rivet.Email"],
@@ -36,6 +32,13 @@ defmodule RivetEmail.MixProject do
 
   def application do
     [
+      env: [
+        rivet: [
+          app: :rivet_email,
+          models_dir: "email",
+          app_base: Rivet.Email
+        ],
+      ],
       extra_applications: [:logger, :timex, {:ex_unit, :optional}]
     ]
   end
@@ -56,7 +59,7 @@ defmodule RivetEmail.MixProject do
       {:html_sanitize_ex, "~> 1.4"},
       {:jason, "~> 1.0"},
       {:mix_test_watch, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:rivet, "~> 1.0.6"},
+      {:rivet, "~> 1.0.6", git: "https://github.com/srevenant/rivet", branch: "migrate-release"},
       {:timex, "~> 3.6"},
       {:transmogrify, "~> 1.1.0"}
     ]
