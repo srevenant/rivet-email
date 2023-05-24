@@ -18,7 +18,7 @@ defmodule Rivet.Email do
       @user_model Keyword.get(opts, :user_model, Rivet.Ident.User)
       @email_model Keyword.get(opts, :email_model, Rivet.Ident.Email)
       @app Keyword.get(opts, :otp_app)
-      @cfgkey :rivet_email
+      @cfg_key :email
       @backend Keyword.get(opts, :backend)
       require Logger
 
@@ -44,7 +44,7 @@ defmodule Rivet.Email do
       ##########################################################################
       defp get_cfg(opts) do
         {:ok,
-         Application.get_env(@app, @cfgkey)
+         Application.get_env(@app, @cfg_key)
          |> Keyword.merge(opts)
          |> Map.new()
          |> case do
@@ -76,7 +76,7 @@ defmodule Rivet.Email do
 
       ##########################################################################
       def send_email(%Bamboo.Email{to: addr, subject: subj} = email) do
-        if Application.fetch_env!(@cfgkey, :enabled) do
+        if Application.get_env(@app, @cfg_key)[:enabled] do
           if String.contains?("@example.com", addr) do
             Logger.warn("Not delivering email to example email #{addr}")
             log_email(email)
