@@ -59,14 +59,14 @@ defmodule Rivet.Email do
 
       ##########################################################################
       @spec deliver(recipient :: any(), template :: atom(), opts :: map()) ::
-              {:ok, Bamboo.Email.t()} | {:error, term()}
+              {:ok, Swoosh.Email.t()} | {:error, term()}
       def deliver(%@email_model{} = recipient, template, opts) do
         case template.generate(recipient, opts) do
           {:ok, subject, body} ->
-            Bamboo.Email.new_email(to: recipient.address, from: opts.email_from)
-            |> Bamboo.Email.subject(subject)
-            |> Bamboo.Email.html_body("<html><body>#{body}</body></html>")
-            |> Bamboo.Email.text_body(Rivet.Email.Template.html2text(body))
+            Swoosh.Email.new(from: opts.email_from, to: recipient.address)
+            |> Swoosh.Email.subject(subject)
+            |> Swoosh.Email.html_body("<html><body>#{body}</body></html>")
+            |> Swoosh.Email.text_body(Rivet.Email.Template.html2text(body))
             |> send_email()
 
           other ->
@@ -75,7 +75,7 @@ defmodule Rivet.Email do
       end
 
       ##########################################################################
-      def send_email(%Bamboo.Email{to: addr, subject: subj} = email) do
+      def send_email(%Swoosh.Email{to: addr, subject: subj} = email) do
         if Application.get_env(@app, @cfg_key)[:enabled] do
           if String.contains?("@example.com", addr) do
             Logger.warn("Not delivering email to example email #{addr}")
@@ -92,7 +92,7 @@ defmodule Rivet.Email do
       end
 
       ##########################################################################
-      def log_email(%Bamboo.Email{} = email) do
+      def log_email(%Swoosh.Email{} = email) do
         Logger.warning("""
         Subject: #{email.subject}
         --- html

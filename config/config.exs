@@ -22,9 +22,9 @@ config :rivet_email,
   enabled: false,
   mailer: Rivet.Email.Example.Mailer
 
-# See BambooMailer docs for more information on this configuration
+# See Swoosh Mailer docs for more information on this configuration
 config :rivet_email, Rivet.Email.Example.Mailer.Backend,
-  adapter: Bamboo.SMTPAdapter,
+  adapter: Swoosh.Adapters.SMTP,
   server: "mail.example.com",
   hostname: "example.com",
   port: 25,
