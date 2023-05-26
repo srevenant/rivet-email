@@ -5,10 +5,10 @@ defmodule Rivet.Email.Test do
 
   doctest Rivet.Email.Template, import: true
 
-  test "Rivet.Email.convert_case/3" do
+  test "send via template" do
     assert capture_log(fn ->
-             Mailer.send(Mailer.User.mock(), Mailer.Template, tester: "testing")
-           end) =~ """
+      assert {:ok, ["email disabled"]} = Mailer.Template.send(Mailer.User.mock(), tester: "testing")
+     end) =~ """
            Subject: test subject\n--- html\n<html><body><p>Welcome Doctor Who<p>This is a test from noreply@example.com</body></html>\n--- text\n\r\nWelcome Doctor Who\r\nThis is a test from noreply@example.com
            """
   end

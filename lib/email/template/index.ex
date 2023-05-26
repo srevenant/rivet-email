@@ -1,6 +1,7 @@
 defmodule Rivet.Email.Template do
   @callback generate(recipient :: map(), attributes :: map()) ::
               {:ok, subject :: String.t(), html_body :: String.t()}
+  @callback send(recipients :: any(), assigns :: list()) :: :ok
 
   use TypedEctoSchema
   use Rivet.Ecto.Model
@@ -31,16 +32,25 @@ defmodule Rivet.Email.Template do
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @behaviour Rivet.Email.Template
+      @tname Atom.to_string(__MODULE__)
 
-      def load(email_model, attr) do
-        with {:ok, template} <- Rivet.Email.Template.one(name: "#{__MODULE__}"),
+      def load_and_eval(email_model, assigns) do
+        with {:ok, template} <- Rivet.Email.Template.one(name: @tname),
              {:ok, %{subject: subject, body: html}} <-
                Rivet.Template.load_string(template.data,
-                 assigns: Map.put(attr, :email, email_model)
+                 assigns: Map.put(assigns, :email, email_model)
                ) do
           {:ok, subject, html}
         end
       end
+
+      @impl Rivet.Email.Template
+      def send(targets, assigns), do: Rivet.Email.mailer().send(targets, __MODULE__, assigns)
+      defoverridable send: 2
+
+      @impl Rivet.Email.Template
+      def generate(email, assigns), do: load_and_eval(email, assigns)
+      defoverridable generate: 2
     end
   end
 end

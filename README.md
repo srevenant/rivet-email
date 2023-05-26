@@ -1,24 +1,32 @@
 # Rivet Email
 
-A simple to use templated email system as part of the [Rivets Framework](https://docs.google.com/document/d/1ntoTA9YRE7KvKpmwZRtfzKwTZNgo2CY6YfJnDNQAlBc). Key things to using this:
+A simple to use templated email system as part of
+the [Rivets Framework](https://docs.google.com/document/d/1ntoTA9YRE7KvKpmwZRtfzKwTZNgo2CY6YfJnDNQAlBc). Key things to using this:
 
-* `Backend` — this is what we use for the actual heavy lifting. For now, using Bamboo mailer.
-* `Mailer` — the entrypoint/API used in other apps
-* *templates* — templates to handle messages
+* `Backend` — this is what we use for the actual heavy lifting (Swoosh).
+* `Mailer` — the entrypoint/API used if you don't want to directly address a template.
+* *templates* — templates as Modules to handle messages.
 * *config* — where you specify the Mailer module
-* *data structs* — uses Rivet.Ident.Email and Rivet.Ident.User, but anything can be subbed in
+* *data structs* — uses Rivet.Ident.Email and Rivet.Ident.User, but anything can be subbed in.
 
 Usage steps (see examples that follow for more detail):
 
 1. Configure Rivet Email (see `config/config.exs` for an example of supported configurations).
 2. Create Mailer and Email modules as well as one or more templates (see `lib/email/examples`).
-3. Send email, where `recips` can be a single or list of `user_model`, `email_model` or an ID for a `user_model`:
+3. Create Template Modules, which load an EEX template from the database and
+   evaluate it for each recipient.
+3. Send email by calling `YourTemplateModule.send(recips, assigns)` — where `recips` can be a single
+   or list of `user_model`, `email_model` or an ID for a `user_model`, and `assigns`
+   is a keyword list of assigns passed into the template. By default @site is
+   always included, configured from `config :rivet_email, :site: [keywords]`
 
 ```elixir
-MyEmail.send(recips, MyEmailTemplate)
+YourTemplateModule.send(recips, another_assign: "red")
 ```
 
 ## Rivet Mailer and Email modules
+
+These are stock modules to configure the backend.
 
 ```elixir
 defmodule MyEmailBackend do
@@ -40,16 +48,23 @@ Config:
 
 ```elixir
 config :rivet_email,
-  mailer: MyEmail
+  mailer: MyEmail,
+  ecto_repos: [Rivet.Email.Repo], # required now that we have Db templates
+  enabled: true, # false will just log sent messages rather than sending them
+  site: [
+    # everything here is free-form and up to your templates. It is put into
+    # the template assigns as @site.{...}
+    name: "anything you want"
+  ]
 
-config :your_otp_app,
-  enabled: true
 ```
 
 ## Template
 
-The template defines a generate() function, which accepts the recipient as a UserEmailStruct,
-and attributes as a map. Attributes come from the configuration
+The template may override a `generate` and `send` function, or just accept the
+defaults. The generate function is called once for each recipient (to allow
+personalization), where the send function is the entrypoint (called from other
+code). Send is asynchronous.
 
 ```elixir
 defmodule Myapp.Email.AuthErrorTemplate do
@@ -57,14 +72,11 @@ defmodule Myapp.Email.AuthErrorTemplate do
 
   @impl Rivet.Email.Template
   def generate(recip, attrs) do
+    # if you didn't want to use the DB templating
     {:ok, "failed", "<p>Sorry #{recip.user.name}<p>This didn't work"}
   end
 
-  # create a "send" function (optional), and then call it as:
-  #   AuthErrorTemplate.send(recipients)
   def send(recip) do
-    # gather attributes and do things here
-    # then send:
     Rivet.Email.mailer().send(recip, __MODULE__, attrib1: value, ...)
   end
 end
