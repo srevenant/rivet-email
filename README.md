@@ -22,14 +22,14 @@ MyEmail.send(recips, MyEmailTemplate)
 
 ```elixir
 defmodule MyEmailBackend do
-  use Rivet.Email.Mailer, otp_app: :app_name_here
+  use Rivet.Email.Mailer, otp_app: :your_otp_app
 end
 ```
 
 ```elixir
 defmodule MyEmail do
   use Rivet.Email,
-    otp_app: :app_name_here,
+    otp_app: :your_otp_app,
     backend: MyEmailBackend,
     user_model: Ident.User, # optional; shown with default
     email_model: Ident.Email # optional; shown with default
@@ -40,8 +40,10 @@ Config:
 
 ```elixir
 config :rivet_email,
-  enabled: true,
   mailer: MyEmail
+
+config :your_otp_app,
+  enabled: true
 ```
 
 ## Template
