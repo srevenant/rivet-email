@@ -38,7 +38,8 @@ defmodule Rivet.Email.Template do
         with {:ok, template} <- Rivet.Email.Template.one(name: @tname),
              {:ok, %{subject: subject, body: html}} <-
                Rivet.Template.load_string(template.data,
-                 assigns: Map.put(assigns, :email, email_model)
+                 assigns: Map.put(assigns, :email, email_model),
+                 imports: [Rivet.Email.Template.Helpers]
                ) do
           {:ok, subject, html}
         end

@@ -79,8 +79,8 @@ defmodule Rivet.Email do
           if String.ends_with?("@example.com", eaddr) do
             {:error, :example_email}
           else
-            # with {:ok, _} <-
-              @backend.deliver(email) # , do: :ok
+            Logger.debug("sending email", to: eaddr, from: email.from, subject: subj)
+            @backend.deliver(email)
           end
         else
           Logger.warn("Email disabled, not sending message to #{inspect(addr)}", subject: subj)
