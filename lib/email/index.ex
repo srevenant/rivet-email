@@ -47,7 +47,7 @@ defmodule Rivet.Email do
 
       ##########################################################################
       defp generate_assigns(assigns) do
-        assigns = Map.new(assigns) |> Map.put(:site, Application.get_env(:rivet_email, :site))
+        assigns = Map.new(assigns) |> Map.put(:site, Application.get_env(:rivet_email, :site) |> Map.new())
 
         case Map.get_lazy(assigns, :email_from, fn -> get_in(assigns, [:site, :email_from]) end) do
           nil -> {:error, ":email_from missing"}
