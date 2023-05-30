@@ -36,12 +36,12 @@ defmodule Rivet.Email.Template do
 
       def load_and_eval(email, assigns) do
         with {:ok, template} <- Rivet.Email.Template.one(name: @tname),
-             {:ok, %{subject: subject, body: html}} <- eval(template, email, assigns),
+             {:ok, %{subject: subject, body: html}} <- eval(template.data, email, assigns),
              do: {:ok, subject, html}
       end
 
       def eval(template, email, assigns) do
-        Rivet.Template.load_string(template.data,
+        Rivet.Template.load_string(template,
           assigns: Map.put(assigns, :email, email),
           imports: [Rivet.Email.Template.Helpers]
         )
