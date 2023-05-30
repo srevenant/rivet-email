@@ -80,6 +80,7 @@ defmodule Rivet.Email do
             {:error, :example_email}
           else
             Logger.debug("sending email", to: eaddr, from: email.from, subject: subj)
+            IO.inspect(email, label: "DELIVERING")
             @backend.deliver(email)
           end
         else
