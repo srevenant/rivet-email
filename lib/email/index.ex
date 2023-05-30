@@ -69,6 +69,8 @@ defmodule Rivet.Email do
             |> send_email()
 
           other ->
+            Logger.debug("error processing template", error: other)
+            IO.inspect(other)
             {:error, :invalid_template_result}
         end
       end
@@ -80,7 +82,6 @@ defmodule Rivet.Email do
             {:error, :example_email}
           else
             Logger.debug("sending email", to: eaddr, from: email.from, subject: subj)
-            IO.inspect(email, label: "DELIVERING")
             @backend.deliver(email)
           end
         else
