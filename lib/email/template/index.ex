@@ -34,15 +34,17 @@ defmodule Rivet.Email.Template do
       @behaviour Rivet.Email.Template
       @tname Atom.to_string(__MODULE__)
 
-      def load_and_eval(email_model, assigns) do
+      def load_and_eval(email, assigns) do
         with {:ok, template} <- Rivet.Email.Template.one(name: @tname),
-             {:ok, %{subject: subject, body: html}} <-
-               Rivet.Template.load_string(template.data,
-                 assigns: Map.put(assigns, :email, email_model),
-                 imports: [Rivet.Email.Template.Helpers]
-               ) do
-          {:ok, subject, html}
-        end
+             {:ok, %{subject: subject, body: html}} <- eval(template, email, assigns),
+             do: {:ok, subject, html}
+      end
+
+      def eval(template, email, assigns) do
+        Rivet.Template.load_string(template.data,
+          assigns: Map.put(assigns, :email, email),
+          imports: [Rivet.Email.Template.Helpers]
+        )
       end
 
       @impl Rivet.Email.Template
