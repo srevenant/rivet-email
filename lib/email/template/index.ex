@@ -7,7 +7,7 @@ defmodule Rivet.Email.Template do
   use Rivet.Ecto.Model
 
   typed_schema "email_templates" do
-    field(:name, :string)
+    field(:name, Rivet.Utils.Ecto.Atom)
     field(:data, :string)
     timestamps()
   end
