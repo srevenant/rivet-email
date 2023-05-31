@@ -35,8 +35,8 @@ defmodule RivetEmail.MixProject do
       env: [
         rivet: [
           app: :rivet_email,
-          models_dir: "email",
-          app_base: Rivet.Email
+          base: "Rivet.Email",
+          models_dir: "email"
         ],
       ],
       extra_applications: [:logger, :timex, {:ex_unit, :optional}]
