@@ -59,7 +59,7 @@ defmodule RivetEmail.MixProject do
       {:html_sanitize_ex, "~> 1.4"},
       {:jason, "~> 1.0"},
       {:mix_test_watch, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:rivet, "~> 1.0.6", git: "https://github.com/srevenant/rivet", branch: "migrate-release"},
+      {:rivet, "~> 2.0"},
       {:timex, "~> 3.6"},
       {:transmogrify, "~> 1.1.0"}
     ]
