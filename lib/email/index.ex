@@ -1,14 +1,16 @@
 defmodule Rivet.Email do
   @moduledoc """
-  send(recip, template)
-  send(recip, template, args)
+  send(recips, template)
+  send(recips, template, assigns)
 
-  For each good recipient call template.format(%@email_model{}, args),
+  For each good recipient call template.format(%@email_model{}, assigns),
   where email.user is preloaded on %@email_model{}
 
-  - `recip` can be one or list of: user id, a `user_model`, or a `email_model`
-     (models are defined ...
-  - `opts` (optional) is a dictionary with key/value attributes to use in the template
+  - `recips` can be one or list of: user id, a `user_model`, or a `email_model`
+  - `assigns` (optional) is a dictionary with key/value attributes to use in the template
+
+  Returns a tuple of :ok or :error with a list of results from each send.
+  It will stop at the first error, however, and not continue.
   """
 
   def mailer(), do: Application.get_env(:rivet_email, :mailer)
@@ -17,7 +19,7 @@ defmodule Rivet.Email do
     quote location: :keep, bind_quoted: [opts: opts] do
       @user_model Keyword.get(opts, :user_model, Rivet.Ident.User)
       @email_model Keyword.get(opts, :email_model, Rivet.Ident.Email)
-      @app Keyword.get(opts, :otp_app)
+      @site_key Keyword.get(opts, :rivet_email_data, :rivet_email_data)
       @backend Keyword.get(opts, :backend)
       require Logger
 
@@ -26,72 +28,74 @@ defmodule Rivet.Email do
       @type user_id() :: String.t()
       @type email_recipient() :: email_model() | user_model() | user_id()
 
-      def send(recips, template, opts \\ []) do
-        with {:ok, emails} <- get_emails(recips), {:ok, attrs} <- get_cfg(opts) do
-          send_all(emails, template, attrs)
+      def send(recips, template, assigns \\ []) do
+        with {:ok, emails} <- get_emails(recips),
+             {:ok, assigns} <- generate_assigns(assigns) do
+          send_all(emails, template, assigns, [])
         end
       end
 
-      defp send_all([recip | rest], template, opts) do
-        with {:ok, _} <- deliver(recip, template, opts) do
-          send_all(rest, template, opts)
+      ##########################################################################
+      defp send_all([recip | rest], template, assigns, out) when is_map(assigns) do
+        case deliver(recip, template, assigns) do
+          {:ok, result} -> send_all(rest, template, assigns, [result | out])
+          error -> {:error, error, [out] |> Enum.reverse()}
         end
       end
 
-      defp send_all([], _, _), do: :ok
+      defp send_all([], _, _, out), do: {:ok, Enum.reverse(out)}
 
       ##########################################################################
-      defp get_cfg(opts) do
-        {:ok,
-         Application.get_env(@app, :email)
-         |> Keyword.merge(opts)
-         |> Map.new()
-         |> case do
-           # if email_from is a list, it should be of tuples (but json doesn't allow that)
-           %{email_from: [name, email]} = cfg ->
-             Map.put(cfg, :email_from, {name, email})
+      defp generate_assigns(assigns) do
+        assigns = Map.new(assigns) |> Map.put(:site, Application.get_env(:rivet_email, :site) |> Map.new())
 
-           other ->
-             other
-         end}
+        case Map.get_lazy(assigns, :email_from, fn -> get_in(assigns, [:site, :email_from]) end) do
+          nil -> {:error, ":email_from missing"}
+          [name, email] -> {:ok, Map.put(assigns, :email_from, {name, email})}
+          from -> {:ok, Map.put(assigns, :email_from, from)}
+        end
       end
 
       ##########################################################################
-      @spec deliver(recipient :: any(), template :: atom(), opts :: map()) ::
-              {:ok, Bamboo.Email.t()} | {:error, term()}
-      def deliver(%@email_model{} = recipient, template, opts) do
-        case template.generate(recipient, opts) do
+      @spec deliver(recipient :: any(), template :: atom(), assigns :: map()) ::
+              {:ok, Swoosh.Email.t()} | {:error, term()}
+      def deliver(%@email_model{} = recipient, template, assigns) do
+        case template.generate(recipient, assigns) do
           {:ok, subject, body} ->
-            Bamboo.Email.new_email(to: recipient.address, from: opts.email_from)
-            |> Bamboo.Email.subject(subject)
-            |> Bamboo.Email.html_body("<html><body>#{body}</body></html>")
-            |> Bamboo.Email.text_body(Rivet.Email.Template.html2text(body))
+            Swoosh.Email.new(to: recipient.address, from: assigns.email_from)
+            |> Swoosh.Email.subject(subject)
+            |> Swoosh.Email.html_body("<html><body>#{body}</body></html>")
+            |> Swoosh.Email.text_body(Rivet.Email.Template.html2text(body))
             |> send_email()
 
+          {:error, "Nothing found"} ->
+            Logger.error("Cannot send email; template missing!", template: template)
+
           other ->
+            Logger.debug("error processing template", error: other)
+            IO.inspect(other)
             {:error, :invalid_template_result}
         end
       end
 
       ##########################################################################
-      def send_email(%Bamboo.Email{to: addr, subject: subj} = email) do
-        if Application.fetch_env!(:rivet_email, :enabled) do
-          if String.contains?("@example.com", addr) do
-            Logger.warn("Not delivering email to example email #{addr}")
-            log_email(email)
-            {:ok, email}
+      def send_email(%Swoosh.Email{to: [{_, eaddr} = addr], subject: subj} = email) do
+        if Application.get_env(:rivet_email, :enabled) do
+          if String.ends_with?("@example.com", eaddr) do
+            {:error, :example_email}
           else
-            @backend.deliver_later(email)
+            Logger.debug("sending email", to: eaddr, from: email.from, subject: subj)
+            @backend.deliver(email)
           end
         else
-          Logger.warn("Email disabled, not sending message to #{addr}", subject: subj)
+          Logger.warn("Email disabled, not sending message to #{inspect(addr)}", subject: subj)
           log_email(email)
-          {:ok, email}
+          {:ok, "email disabled"}
         end
       end
 
       ##########################################################################
-      def log_email(%Bamboo.Email{} = email) do
+      def log_email(%Swoosh.Email{} = email) do
         Logger.warning("""
         Subject: #{email.subject}
         --- html
@@ -102,7 +106,7 @@ defmodule Rivet.Email do
       end
 
       ##########################################################################
-      # future: opts can include verfied: true (or some way to only send to verified addresses)
+      # future: assigns can include verfied: true (or some way to only send to verified addresses)
       @spec get_emails(email_recipient() | list(email_recipient)) ::
               {:ok, list(email_model())} | {:error, String.t(), term()}
 

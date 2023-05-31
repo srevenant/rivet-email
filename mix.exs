@@ -5,7 +5,7 @@ defmodule RivetEmail.MixProject do
   def project do
     [
       app: :rivet_email,
-      version: "1.0.5",
+      version: "1.1.1",
       package: package(),
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -43,14 +43,14 @@ defmodule RivetEmail.MixProject do
     ]
   end
 
-  defp elixirc_paths(:test), do: ["lib", "test/lib"]
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
   defp deps do
     [
       # please alphabetize
-      {:bamboo, "~> 1.4"},
-      {:bamboo_smtp, "~> 2.1.0"},
+      {:swoosh, "~> 1.9.1"},
+      {:gen_smtp, "~> 1.2.0"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:ex_machina, "~> 2.7.0", only: :test, runtime: false},
