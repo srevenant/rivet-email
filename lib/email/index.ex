@@ -60,6 +60,7 @@ defmodule Rivet.Email do
       @spec deliver(recipient :: any(), template :: atom(), assigns :: map()) ::
               {:ok, Swoosh.Email.t()} | {:error, term()}
       def deliver(%@email_model{} = recipient, template, assigns) do
+        assigns = Map.put(assigns, :target, recipient)
         case template.generate(recipient, assigns) do
           {:ok, subject, body} ->
             Swoosh.Email.new(to: recipient.address, from: assigns.email_from)

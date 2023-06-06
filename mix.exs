@@ -5,7 +5,7 @@ defmodule RivetEmail.MixProject do
   def project do
     [
       app: :rivet_email,
-      version: "1.1.1",
+      version: "1.2.0",
       package: package(),
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
