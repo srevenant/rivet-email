@@ -73,7 +73,7 @@ defmodule RivetEmail.MixProject do
 
   defp package() do
     [
-      files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
+      files: ~w(lib .formatter.exs mix.exs priv README* LICENSE*),
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => @source_url},
       source_url: @source_url
