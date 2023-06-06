@@ -2,6 +2,7 @@ defmodule Rivet.Email.TemplateTest do
   use ExUnit.Case
 
   doctest Rivet.Email.Template, import: true
+  doctest Rivet.Email.Template.Helpers, import: true
 
   @template """
   === rivet-template-v1

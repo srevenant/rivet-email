@@ -47,7 +47,9 @@ defmodule Rivet.Email do
 
       ##########################################################################
       defp generate_assigns(assigns) do
-        assigns = Map.new(assigns) |> Map.put(:site, Application.get_env(:rivet_email, :site) |> Map.new())
+        assigns =
+          Map.new(assigns)
+          |> Map.put(:site, Application.get_env(:rivet_email, :site) |> Map.new())
 
         case Map.get_lazy(assigns, :email_from, fn -> get_in(assigns, [:site, :email_from]) end) do
           nil -> {:error, ":email_from missing"}
@@ -61,6 +63,7 @@ defmodule Rivet.Email do
               {:ok, Swoosh.Email.t()} | {:error, term()}
       def deliver(%@email_model{} = recipient, template, assigns) do
         assigns = Map.put(assigns, :target, recipient)
+
         case template.generate(recipient, assigns) do
           {:ok, subject, body} ->
             Swoosh.Email.new(to: recipient.address, from: assigns.email_from)
