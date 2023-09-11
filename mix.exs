@@ -49,17 +49,17 @@ defmodule RivetEmail.MixProject do
   defp deps do
     [
       # please alphabetize
-      {:swoosh, "~> 1.9.1"},
-      {:gen_smtp, "~> 1.2.0"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:ex_machina, "~> 2.7.0", only: :test, runtime: false},
       {:excoveralls, "~> 0.14", only: :test, runtime: false},
       {:faker, "~> 0.10", only: :test, runtime: false},
+      {:gen_smtp, "~> 1.2.0"},
       {:html_sanitize_ex, "~> 1.4"},
       {:jason, "~> 1.0"},
-      {:mix_test_watch, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:rivet, "~> 2.0"},
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:rivet, "~> 2.0", git: "https://github.com/srevenant/rivet.git", branch: "deps-update"},
+      {:swoosh, "~> 1.9"},
       {:timex, "~> 3.6"},
       {:transmogrify, "~> 1.1.0"}
     ]
