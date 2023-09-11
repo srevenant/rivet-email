@@ -92,7 +92,7 @@ defmodule Rivet.Email do
             @backend.deliver(email)
           end
         else
-          Logger.warn("Email disabled, not sending message to #{inspect(addr)}", subject: subj)
+          Logger.warning("Email disabled, not sending message to #{inspect(addr)}", subject: subj)
           log_email(email)
           {:ok, "email disabled"}
         end
