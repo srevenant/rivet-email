@@ -1,7 +1,7 @@
 import Config
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, level: :warning
 
 config :ex_unit, capture_log: true
 

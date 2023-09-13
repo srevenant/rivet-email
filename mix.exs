@@ -58,7 +58,7 @@ defmodule RivetEmail.MixProject do
       {:html_sanitize_ex, "~> 1.4"},
       {:jason, "~> 1.0"},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:rivet, "~> 2.0", git: "https://github.com/srevenant/rivet.git", branch: "deps-update"},
+      {:rivet, "~> 2.1"},
       {:swoosh, "~> 1.9"},
       {:timex, "~> 3.6"},
       {:transmogrify, "~> 1.1.0"}
