@@ -58,10 +58,11 @@ defmodule RivetEmail.MixProject do
       {:html_sanitize_ex, "~> 1.4"},
       {:jason, "~> 1.0"},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:rivet, "~> 2.1"},
+      # {:rivet, "~> 2.1"},
+      {:rivet, "~> 2.2",  git: "https://github.com/srevenant/rivet.git", branch: "v2"},
       {:swoosh, "~> 1.9"},
       {:timex, "~> 3.6"},
-      {:transmogrify, "~> 1.1.0"}
+      {:transmogrify, "~> 2.0.2",  git: "https://github.com/srevenant/transmogrify.git", branch: "master"},
     ]
   end
 
