@@ -1,7 +1,7 @@
 defmodule Rivet.Email.Template do
   @callback generate(recipient :: map(), attributes :: map()) ::
               {:ok, subject :: String.t(), html_body :: String.t()}
-  @callback send(recipients :: any(), assigns :: list()) :: :ok
+  @callback sendto(recipients :: any(), assigns :: list()) :: :ok
 
   use TypedEctoSchema
   use Rivet.Ecto.Model
@@ -12,7 +12,7 @@ defmodule Rivet.Email.Template do
     timestamps()
   end
 
-  use Rivet.Ecto.Collection, required: [:name], update: [:data], unique_constraints: [:name]
+  use Rivet.Ecto.Collection, required: [:name], update: [:data, :name], unique_constraints: [:name]
 
   @doc ~S"""
   iex> html2text("<b>an html doc</b><p><h1>Header</h1>")
@@ -31,6 +31,7 @@ defmodule Rivet.Email.Template do
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
+      require Logger
       @behaviour Rivet.Email.Template
       @tname Atom.to_string(__MODULE__)
 
@@ -47,9 +48,15 @@ defmodule Rivet.Email.Template do
         )
       end
 
+      # temporary; using this was a mistake as it collides with core functions
+      def send(x, y) do
+        Logger.error("#{__MODULE__}.send() is deprecated and should be replaced")
+        sendto(x, y)
+      end
+
       @impl Rivet.Email.Template
-      def send(targets, assigns), do: Rivet.Email.mailer().send(targets, __MODULE__, assigns)
-      defoverridable send: 2
+      def sendto(targets, assigns), do: Rivet.Email.mailer().sendto(targets, __MODULE__, assigns)
+      defoverridable sendto: 2
 
       @impl Rivet.Email.Template
       def generate(email, assigns), do: load_and_eval(email, assigns)

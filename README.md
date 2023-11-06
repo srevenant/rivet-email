@@ -15,13 +15,13 @@ Usage steps (see examples that follow for more detail):
 2. Create Mailer and Email modules as well as one or more templates (see `lib/email/examples`).
 3. Create Template Modules, which load an EEX template from the database and
    evaluate it for each recipient.
-3. Send email by calling `YourTemplateModule.send(recips, assigns)` — where `recips` can be a single
+3. Send email by calling `YourTemplateModule.sendto(recips, assigns)` — where `recips` can be a single
    or list of `user_model`, `email_model` or an ID for a `user_model`, and `assigns`
    is a keyword list of assigns passed into the template. By default @site is
    always included, configured from `config :rivet_email, :site: [keywords]`
 
 ```elixir
-YourTemplateModule.send(recips, another_assign: "red")
+YourTemplateModule.sendto(recips, another_assign: "red")
 ```
 
 ## Rivet Mailer and Email modules
@@ -76,8 +76,8 @@ defmodule Myapp.Email.AuthErrorTemplate do
     {:ok, "failed", "<p>Sorry #{recip.user.name}<p>This didn't work"}
   end
 
-  def send(recip) do
-    Rivet.Email.mailer().send(recip, __MODULE__, attrib1: value, ...)
+  def sendto(recip) do
+    Rivet.Email.mailer().sendto(recip, __MODULE__, attrib1: value, ...)
   end
 end
 ```
