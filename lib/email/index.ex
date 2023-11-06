@@ -1,7 +1,7 @@
 defmodule Rivet.Email do
   @moduledoc """
-  send(recips, template)
-  send(recips, template, assigns)
+  sendto(recips, template)
+  sendto(recips, template, assigns)
 
   For each good recipient call template.format(%@email_model{}, assigns),
   where email.user is preloaded on %@email_model{}
@@ -28,7 +28,7 @@ defmodule Rivet.Email do
       @type user_id() :: String.t()
       @type email_recipient() :: email_model() | user_model() | user_id()
 
-      def send(recips, template, assigns \\ []) do
+      def sendto(recips, template, assigns \\ []) do
         with {:ok, emails} <- get_emails(recips),
              {:ok, assigns} <- generate_assigns(assigns) do
           send_all(emails, template, assigns, [])
