@@ -133,14 +133,14 @@ defmodule Rivet.Email do
 
       ##########################################################################
       @spec get_email(email_recipient()) :: {:ok, email_model()} | {:error, reason :: any()}
-      defp get_email(%@email_model{} = email) do
+      def get_email(%@email_model{} = email) do
         with {:ok, %@email_model{} = email} <- @email_model.preload(email, :user) do
           {:ok, email}
         end
       end
 
       # TODO: verified should be a settable option
-      defp get_email(%@user_model{} = user) do
+      def get_email(%@user_model{} = user) do
         with {:ok, %@user_model{emails: emails}} <- @user_model.preload(user, :emails) do
           case Enum.find(emails, fn e -> e.verified end) do
             %@email_model{} = email ->
@@ -157,7 +157,7 @@ defmodule Rivet.Email do
         end
       end
 
-      defp get_email(user_id) when is_binary(user_id) do
+      def get_email(user_id) when is_binary(user_id) do
         with {:ok, user} <- @user_model.one(user_id) do
           get_email(user)
         end

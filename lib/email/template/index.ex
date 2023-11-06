@@ -31,6 +31,7 @@ defmodule Rivet.Email.Template do
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
+      require Logger
       @behaviour Rivet.Email.Template
       @tname Atom.to_string(__MODULE__)
 
@@ -47,9 +48,15 @@ defmodule Rivet.Email.Template do
         )
       end
 
+      # temporary; using this was a mistake as it collides with core functions
+      def send(x, y) do
+        Logger.error("#{__MODULE__}.send() is deprecated and should be replaced")
+        sendto(x, y)
+      end
+
       @impl Rivet.Email.Template
       def sendto(targets, assigns), do: Rivet.Email.mailer().sendto(targets, __MODULE__, assigns)
-      defoverridable send: 2
+      defoverridable sendto: 2
 
       @impl Rivet.Email.Template
       def generate(email, assigns), do: load_and_eval(email, assigns)
