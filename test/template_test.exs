@@ -22,7 +22,13 @@ defmodule Rivet.Email.TemplateTest do
   end
 
   test "handle bad" do
-    assert {:error, {%{message: "expected closing '%>' for EEx expression\n  |\n1 | <% import Elixir.Rivet.Email.Template.Helpers;import Transmogrify;import Transmogrify.As %><p>\n2 | This is a message body for <%= @email %>\n3 | <%= bad \n  | ^"}, _}} =
+    # missing token '%>'"
+    assert {:error,
+            {%{
+               message: "expected closing '%>' for EEx expression\n  |\n1 | <% import Elixir.Rivet.Email.Template.Helpers;import Transmogrify;import Transmogrify.As %><p>\n2 | This is a message body for <%= @email %>\n3 | <%= bad \n  | ^"
+              # 1.14 :"missing token '%>'"
+             },
+             _}} =
              Rivet.Email.Test.Template.eval(@template <> "<%= bad ", "nobody@example.com", %{
                something: "reset"
              })

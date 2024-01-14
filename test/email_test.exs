@@ -4,6 +4,7 @@ defmodule Rivet.Email.Test do
   alias Rivet.Email.Example.Mailer
 
   doctest Rivet.Email.Template, import: true
+  doctest Rivet.Email, import: true
 
   test "send via template" do
     assert capture_log(fn ->
