@@ -56,7 +56,10 @@ defmodule Rivet.Email do
       defp get_config(name) do
         case Rivet.Email.Template.one(name: "--config:" <> name) do
           {:ok, c} ->
-            Jason.decode(c.data) |> Transmogrify.transmogrify()
+            Jason.decode(c.data)
+            |> IO.inspect(label: "Befor")
+            |> Transmogrify.transmogrify()
+            |> IO.inspect(label: "Aftur")
 
           _ ->
             {:error, "No email config for: #{name}"}
