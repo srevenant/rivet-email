@@ -69,12 +69,6 @@ defmodule Rivet.Email.Template do
         )
       end
 
-      # temporary; using this was a mistake as it collides with core functions
-      def send(x, y) do
-        Logger.error("#{__MODULE__}.send() is deprecated and should be replaced")
-        sendto(x, y)
-      end
-
       if @assigns do
         def merge_assigns(assigns), do: Keyword.merge(@assigns, assigns)
       else

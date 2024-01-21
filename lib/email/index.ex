@@ -73,6 +73,7 @@ defmodule Rivet.Email do
       ##########################################################################
       def generate_assigns(assigns, configs) do
         with {:ok, cfgs} <- Enum.reduce_while(configs, {:ok, %{}}, &reduce_load_config/2) do
+          IO.inspect(cfgs, label: "CFGS")
           assigns = Map.merge(cfgs, Map.new(assigns))
 
           # site config is merged into one, allowing assigns to override things
