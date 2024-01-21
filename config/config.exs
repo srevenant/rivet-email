@@ -13,15 +13,8 @@ config :rivet_email,
   ecto_repos: [Rivet.Email.Repo],
   enabled: false,
   mailer: Rivet.Email.Example.Mailer,
-  # this is where you define common things used in templates, which appears
-  # in assigns as @site.{...}
-  site: [
-    # link_front: "http://localhost:3000",
-    # link_back: "http://localhost:4000",
-    # org: "Example Org",
-    # email_sig: "Example Org"
-    email_from: "noreply@example.com"
-  ]
+  # a special row in the templates table with JSON/config data for all templates
+  site_configs: "--config:site"
 
 # See Swoosh Mailer docs for more information on this configuration
 config :rivet_email, Rivet.Email.Example.Mailer.Backend,

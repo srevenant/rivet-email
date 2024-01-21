@@ -19,7 +19,6 @@ defmodule Rivet.Email do
     quote location: :keep, bind_quoted: [opts: opts] do
       @user_model Keyword.get(opts, :user_model, Rivet.Ident.User)
       @email_model Keyword.get(opts, :email_model, Rivet.Ident.Email)
-      @site_key Keyword.get(opts, :rivet_email_data, :rivet_email_data)
       @backend Keyword.get(opts, :backend)
       require Logger
 
@@ -28,9 +27,16 @@ defmodule Rivet.Email do
       @type user_id() :: String.t()
       @type email_recipient() :: email_model() | user_model() | user_id()
 
-      def sendto(recips, template, assigns \\ []) do
+      # future: changes assigns to opts and allow for more than just 'site'
+      # config data to be imported from Db
+      def sendto(recips, template, assigns \\ [], configs \\ [])
+
+      def sendto([], template, assigns, configs),
+        do: Logger.error("Cannot send email to no recipients!", template: template)
+
+      def sendto(recips, template, assigns, configs) do
         with {:ok, emails} <- get_emails(recips),
-             {:ok, assigns} <- generate_assigns(assigns) do
+             {:ok, assigns} <- generate_assigns(assigns, configs) do
           send_all(emails, template, assigns, [])
         end
       end
@@ -46,15 +52,35 @@ defmodule Rivet.Email do
       defp send_all([], _, _, out), do: {:ok, Enum.reverse(out)}
 
       ##########################################################################
-      defp generate_assigns(assigns) do
-        assigns =
-          Map.new(assigns)
-          |> Map.put(:site, Application.get_env(:rivet_email, :site) |> Map.new())
+      # future: for scale of thousands/second, add a read-through cache with Rivet lazy cache
+      defp get_config(name) do
+        case Rivet.Email.Template.one(name: "--config:" <> name) do
+          {:ok, c} ->
+            Jason.decode(c.data) |> Transmogrify.transmogrify()
 
-        case Map.get_lazy(assigns, :email_from, fn -> get_in(assigns, [:site, :email_from]) end) do
-          nil -> {:error, ":email_from missing"}
-          [name, email] -> {:ok, Map.put(assigns, :email_from, {name, email})}
-          from -> {:ok, Map.put(assigns, :email_from, from)}
+          _ ->
+            {:error, "No email config for: #{name}"}
+        end
+      end
+
+      defp reduce_load_config(name, {:ok, cfgs}) do
+        case get_config("site") do
+          {:ok, config} -> {:cont, {:ok, Map.merge(cfgs, config)}}
+          error -> {:halt, error}
+        end
+      end
+
+      ##########################################################################
+      def generate_assigns(assigns, configs) do
+        with {:ok, cfgs} <- Enum.reduce_while(configs, {:ok, %{}}, &reduce_load_config/2) do
+          assigns = Map.merge(cfgs, Map.new(assigns))
+
+          # site config is merged into one, allowing assigns to override things
+          case Map.get(assigns, :email_from) do
+            nil -> {:error, ":email_from missing"}
+            [name, email] -> {:ok, Map.put(assigns, :email_from, {name, email})}
+            from -> {:ok, Map.put(assigns, :email_from, from)}
+          end
         end
       end
 
@@ -134,14 +160,14 @@ defmodule Rivet.Email do
       ##########################################################################
       @spec get_email(email_recipient()) :: {:ok, email_model()} | {:error, reason :: any()}
       def get_email(%@email_model{} = email) do
-        with {:ok, %@email_model{} = email} <- @email_model.preload(email, :user) do
+        with {:ok, %@email_model{} = email} <- @email_model.preload(email, [:user]) do
           {:ok, email}
         end
       end
 
       # TODO: verified should be a settable option
       def get_email(%@user_model{} = user) do
-        with {:ok, %@user_model{emails: emails}} <- @user_model.preload(user, :emails) do
+        with {:ok, %@user_model{emails: emails}} <- @user_model.preload(user, [:emails]) do
           case Enum.find(emails, fn e -> e.verified end) do
             %@email_model{} = email ->
               {:ok, %@email_model{email | user: user}}

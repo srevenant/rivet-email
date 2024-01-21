@@ -41,16 +41,21 @@ defmodule Rivet.Email.Template do
   """
   def preserve_links(str) do
     Regex.replace(
-      ~r/<a[^>]+href="([^"]+)">([^<]+)<\/a>/, str, fn _, url, text -> "#{text}<#{url}>" end
+      ~r/<a[^>]+href="([^"]+)">([^<]+)<\/a>/,
+      str,
+      fn _, url, text -> "#{text}<#{url}>" end
     )
   end
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       require Logger
+      @assigns Keyword.get(opts, :assigns, false)
+      @configs Keyword.get(opts, :configs, [:site])
       @behaviour Rivet.Email.Template
       @tname Atom.to_string(__MODULE__)
 
+      # future: for scale of thousands/second, add a read-through cache with Rivet lazy cache
       def load_and_eval(email, assigns) do
         with {:ok, template} <- Rivet.Email.Template.one(name: @tname),
              {:ok, %{subject: subject, body: html}} <- eval(template.data, email, assigns),
@@ -70,8 +75,16 @@ defmodule Rivet.Email.Template do
         sendto(x, y)
       end
 
+      if @assigns do
+        def merge_assigns(assigns), do: Keyword.merge(@assigns, assigns)
+      else
+        def merge_assigns(assigns), do: assigns
+      end
+
       @impl Rivet.Email.Template
-      def sendto(targets, assigns), do: Rivet.Email.mailer().sendto(targets, __MODULE__, assigns)
+      def sendto(targets, assigns),
+        do: Rivet.Email.mailer().sendto(targets, __MODULE__, merge_assigns(assigns), @configs)
+
       defoverridable sendto: 2
 
       @impl Rivet.Email.Template
