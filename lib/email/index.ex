@@ -54,7 +54,7 @@ defmodule Rivet.Email do
       ##########################################################################
       # future: for scale of thousands/second, add a read-through cache with Rivet lazy cache
       defp get_config(name) do
-        case Rivet.Email.Template.one(name: "--config:" <> name) do
+        case Rivet.Email.Template.one(name: "//CONFIG/" <> name) do
           {:ok, c} ->
             with {:ok, data} <- Jason.decode(c.data), do: {:ok, Transmogrify.transmogrify(data)}
 
@@ -88,7 +88,8 @@ defmodule Rivet.Email do
       @spec deliver(recipient :: any(), template :: atom(), assigns :: map()) ::
               {:ok, Swoosh.Email.t()} | {:error, term()}
       def deliver(%@email_model{} = recipient, template, assigns) do
-        assigns = Map.put(assigns, :target, recipient)
+        # the only magic value
+        assigns = Map.put(assigns, :recipient, recipient)
 
         case template.generate(recipient, assigns) do
           {:ok, subject, body} ->
