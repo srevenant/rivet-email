@@ -6,7 +6,7 @@ defmodule Rivet.Email.Configurator do
       @persist_for 600_000
 
       def get({name, nil}), do: get_(name)
-  
+
       def get({name, site}) do
         case get_("#{name}/#{site}") do
           {:ok, _} = pass -> pass
@@ -21,7 +21,7 @@ defmodule Rivet.Email.Configurator do
         case lookup(name) do
           [{_, target, _}] -> {:ok, target}
           _ ->
-            case Rivet.Email.Template.one(name: "//CONFIG/" <> name) do
+            case Rivet.Email.Template.one(name: "//CONFIG/#{name}") do
               {:ok, c} ->
                 with {:ok, data} <- Jason.decode(c.data) do
                   data = Transmogrify.transmogrify(data)
