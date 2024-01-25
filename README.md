@@ -44,13 +44,10 @@ Additionally you can include configs at runtime as an option to the sendto() cal
 These are stock modules to configure the backend.
 
 ```elixir
-defmodule MyEmailBackend do
-  use Rivet.Email.Mailer, otp_app: :your_otp_app
+defmodule MyEmail.Backend do
+  use Rivet.Email.Backend, otp_app: :your_otp_app
 end
-```
 
-# used for cacheing configs; must be started in the application
-```elixir
 defmodule MyEmail.Configurator do
   use Rivet.Email.Configurator, otp_app: :your_otp_app
 end
@@ -58,14 +55,15 @@ end
 
 and in application.ex:
 ```elixir
-  Supervisor.start_link([MyEmail.configurator])
+  Supervisor.start_link([MyEmail.Configurator])
 ```
 
 ```elixir
 defmodule MyEmail do
   use Rivet.Email,
     otp_app: :your_otp_app,
-    backend: MyEmailBackend,
+    backend: MyEmail.Backend,
+    configurator: MyEmail.Configurator
     user_model: Ident.User, # optional; shown with default
     email_model: Ident.Email # optional; shown with default
 end

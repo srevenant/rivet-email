@@ -1,27 +1,12 @@
 defmodule Rivet.Email do
-  @moduledoc """
-
-  sendto(recips, template, assigns \\ %{}, configs \\ [])
-
-  - `recips` can be one or list of: user id, a `user_model`, or a `email_model`
-  - `assigns` (optional) is a dictionary with key/value attributes used in the
-    eex template processing.
-  - `configs` is a list of configs to load, as either a config name string,
-    or as a tuple of {configname, sitename} if it is site specific (the latter
-    will fall back to just configname if no sitename is found in configs).
-
-  Returns a tuple of :ok or :error with a list of results from each send.
-  It will stop at the first error, however, and not continue.
-  """
-
   def mailer(), do: Application.get_env(:rivet_email, :mailer)
-  def configurator(), do: Application.get_env(:rivet_email, :configurator)
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @user_model Keyword.get(opts, :user_model, Rivet.Ident.User)
       @email_model Keyword.get(opts, :email_model, Rivet.Ident.Email)
       @backend Keyword.get(opts, :backend)
+      @configurator Keyword.get(opts, :configurator)
       require Logger
 
       @type email_model() :: @email_model.t()
@@ -55,7 +40,7 @@ defmodule Rivet.Email do
 
       ##########################################################################
       # future: for scale of thousands/second, add a read-through cache with Rivet lazy cache
-      defp get_config(name), do: Rivet.Email.configurator().get(name)
+      defp get_config(name), do: @configurator.get(name)
 
       defp reduce_load_config(name, {:ok, cfgs}) do
         case get_config("site") do
