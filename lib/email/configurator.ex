@@ -17,7 +17,6 @@ defmodule Rivet.Email.Configurator do
       def get(name), do: get_(name)
 
       defp get_(name) do
-        IO.puts("Trying #{name}")
         case lookup(name) do
           [{_, target, _}] -> {:ok, target}
           _ ->
