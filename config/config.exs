@@ -13,6 +13,7 @@ config :rivet_email,
   ecto_repos: [Rivet.Email.Repo],
   enabled: false,
   mailer: Rivet.Email.Example.Mailer,
+  configurator: Rivet.Email.Example.Configurator,
   # a special row in the templates table with JSON/config data for all templates
   site_configs: "--config:site"
 

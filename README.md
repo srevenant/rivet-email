@@ -15,14 +15,29 @@ Usage steps (see examples that follow for more detail):
 2. Create Mailer and Email modules as well as one or more templates (see `lib/email/examples`).
 3. Create Template Modules, which load an EEX template from the database and
    evaluate it for each recipient.
-3. Send email by calling `YourTemplateModule.sendto(recips, assigns)` — where `recips` can be a single
-   or list of `user_model`, `email_model` or an ID for a `user_model`, and `assigns`
-   is a keyword list of assigns passed into the template. By default @site is
-   always included, configured from `config :rivet_email, :site: [keywords]`
+3. Send email by calling `sendto` as shown below.
 
-```elixir
-YourTemplateModule.sendto(recips, another_assign: "red")
-```
+`YourTemplateModule.sendto(recips, assigns \\ %{}, configs \\ [])`
+
+Returns a tuple of :ok or :error with a list of results from each send.
+
+- `recips` can be one or list of: user id, a `user_model`, or a `email_model`
+- `assigns` (optional) is a dictionary with key/value attributes used in the
+  eex template processing.
+- `configs` (optional) is a list of configs to load, as either a config name string,
+  or as a tuple of {configname, sitename} if it is site specific (the latter
+  will fall back to just configname if no sitename is found in configs).
+
+It will stop at the first error, however, and not continue.
+
+Configs are stored in the templates table with a keyword of `//CONFIG/{name}/{sitename}`
+or `//CONFIG/{name}` — the default config name is `site` but you can add any others
+as you desire, and include them with the template as an option on template creation,
+example:
+
+  ```use Rivet.Email.Template, configs: ["name"]```
+
+Additionally you can include configs at runtime as an option to the sendto() call.
 
 ## Rivet Mailer and Email modules
 
@@ -32,6 +47,18 @@ These are stock modules to configure the backend.
 defmodule MyEmailBackend do
   use Rivet.Email.Mailer, otp_app: :your_otp_app
 end
+```
+
+# used for cacheing configs; must be started in the application
+```elixir
+defmodule MyEmail.Configurator do
+  use Rivet.Email.Configurator, otp_app: :your_otp_app
+end
+```
+
+and in application.ex:
+```elixir
+  Supervisor.start_link([MyEmail.configurator])
 ```
 
 ```elixir

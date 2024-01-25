@@ -51,7 +51,7 @@ defmodule Rivet.Email.Template do
     quote location: :keep, bind_quoted: [opts: opts] do
       require Logger
       @assigns Keyword.get(opts, :assigns, false)
-      @configs Keyword.get(opts, :configs, [:site])
+      @configs Keyword.get(opts, :configs, ["site"])
       @behaviour Rivet.Email.Template
       @tname Atom.to_string(__MODULE__)
 
@@ -76,10 +76,10 @@ defmodule Rivet.Email.Template do
       end
 
       @impl Rivet.Email.Template
-      def sendto(targets, assigns),
-        do: Rivet.Email.mailer().sendto(targets, __MODULE__, merge_assigns(assigns), @configs)
+      def sendto(targets, assigns, configs \\ @configs),
+        do: Rivet.Email.mailer().sendto(targets, __MODULE__, merge_assigns(assigns))
 
-      defoverridable sendto: 2
+      defoverridable sendto: 2, sendto: 3
 
       @impl Rivet.Email.Template
       def generate(email, assigns), do: load_and_eval(email, assigns)
