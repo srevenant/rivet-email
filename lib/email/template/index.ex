@@ -77,7 +77,7 @@ defmodule Rivet.Email.Template do
 
       @impl Rivet.Email.Template
       def sendto(targets, assigns, configs \\ @configs),
-        do: Rivet.Email.mailer().sendto(targets, __MODULE__, merge_assigns(assigns))
+        do: Rivet.Email.mailer().sendto(targets, __MODULE__, merge_assigns(assigns), configs)
 
       defoverridable sendto: 2, sendto: 3
 
