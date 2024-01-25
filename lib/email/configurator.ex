@@ -17,13 +17,11 @@ defmodule Rivet.Email.Configurator do
       def get(name), do: get_(name)
 
       defp get_(name) do
-        IO.puts("CONFIG? #{name}")
         case lookup(name) do
           [{_, target, _}] -> {:ok, target}
           _ ->
             case Rivet.Email.Template.one(name: "//CONFIG/#{name}") do
               {:ok, c} ->
-                IO.puts("HIT #{name}")
                 with {:ok, data} <- Jason.decode(c.data) do
                   data = Transmogrify.transmogrify(data)
                   insert(name, data, @persist_for)
