@@ -22,6 +22,7 @@ defmodule Rivet.Email do
         do: Logger.error("Cannot send email to no recipients!", template: template)
 
       def sendto(recips, template, assigns, configs) do
+        IO.inspect({recips, template, assigns, configs}, label: "sendto/4")
         with {:ok, emails} <- get_emails(recips),
              {:ok, assigns} <- generate_assigns(assigns, configs) do
           send_all(emails, template, assigns, [])
@@ -43,7 +44,8 @@ defmodule Rivet.Email do
       defp get_config(name), do: @configurator.get(name)
 
       defp reduce_load_config(name, {:ok, cfgs}) do
-        case get_config("site") do
+        IO.inspect(name, label: "getconfig")
+        case get_config(name) do
           {:ok, config} -> {:cont, {:ok, Map.merge(cfgs, config)}}
           error -> {:halt, error}
         end
