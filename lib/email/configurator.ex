@@ -6,7 +6,6 @@ defmodule Rivet.Email.Configurator do
       @persist_for 600_000
 
       def get({name, site}) do
-        IO.puts("Trying //CONFIG/#{name}/#{site}")
         case get_("#{name}/#{site}") do
           {:ok, _} = pass -> pass
           _ -> get_(name)
