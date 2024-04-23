@@ -94,7 +94,7 @@ defmodule Rivet.Email do
               end
 
             IO.inspect(e)
-            {:error, {:eval, "#{line} assign missing #{e.key} #{e.message}", trace}}
+            {:error, {:eval, "#{line}assign missing: '#{e.key}' #{e.message}", trace}}
 
           other ->
             Logger.debug("error processing template", error: other)
