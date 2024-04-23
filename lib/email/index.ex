@@ -32,7 +32,8 @@ defmodule Rivet.Email do
       defp send_all([recip | rest], template, assigns, out) when is_map(assigns) do
         case deliver(recip, template, assigns) do
           {:ok, result} -> send_all(rest, template, assigns, [result | out])
-          error -> {:error, error, [out] |> Enum.reverse()}
+          {:error, error} -> {:error, error, [out] |> Enum.reverse()}
+          other -> {:error, other, [out] |> Enum.reverse()}
         end
       end
 
