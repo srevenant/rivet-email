@@ -3,7 +3,7 @@ defmodule Rivet.Email do
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
-      @from_key Application.compile_env!(:rivet_email, :from_key, [:email_from])
+      @from_key Keyword.get(opts, :from_key, [:email_from])
       @user_model Keyword.get(opts, :user_model, Rivet.Ident.User)
       @email_model Keyword.get(opts, :email_model, Rivet.Ident.Email)
       @backend Keyword.get(opts, :backend)
