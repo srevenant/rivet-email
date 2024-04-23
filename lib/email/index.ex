@@ -3,6 +3,7 @@ defmodule Rivet.Email do
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
+      @from_key Application.compile_env!(:rivet_email, :from_key, [:email_from])
       @user_model Keyword.get(opts, :user_model, Rivet.Ident.User)
       @email_model Keyword.get(opts, :email_model, Rivet.Ident.Email)
       @backend Keyword.get(opts, :backend)
@@ -56,10 +57,10 @@ defmodule Rivet.Email do
           assigns = Map.merge(cfgs, Map.new(assigns))
 
           # site config is merged into one, allowing assigns to override things
-          case Map.get(assigns, :email_from) do
-            nil -> {:error, ":email_from missing"}
-            [name, email] -> {:ok, Map.put(assigns, :email_from, {name, email})}
-            from -> {:ok, Map.put(assigns, :email_from, from)}
+          case get_in(assigns, @from_key) do
+            nil -> {:error, "Sender email address is missing from assigns (@#{Enum.join(@from_key, ".")})"}
+            [name, email] -> {:ok, put_in(assigns, @from_key, {name, email})}
+            from -> {:ok, put_in(assigns, @from_key, from)}
           end
         end
       end
@@ -73,7 +74,7 @@ defmodule Rivet.Email do
 
         case template.generate(recipient, assigns) do
           {:ok, subject, body} ->
-            Swoosh.Email.new(to: recipient.address, from: assigns.email_from)
+            Swoosh.Email.new(to: recipient.address, from: get_in(assigns, @from_key))
             |> Swoosh.Email.subject(subject)
             |> Swoosh.Email.html_body("<html><body>#{body}</body></html>")
             |> Swoosh.Email.text_body(Rivet.Email.Template.html2text(body))
