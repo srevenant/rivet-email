@@ -18,7 +18,9 @@ defmodule Rivet.Email.Configurator do
 
       defp get_(name) do
         case lookup(name) do
-          [{_, target, _}] -> {:ok, target}
+          [{_, target, _}] ->
+            {:ok, target}
+
           _ ->
             case Rivet.Email.Template.one(name: "//CONFIG/#{name}") do
               {:ok, c} ->

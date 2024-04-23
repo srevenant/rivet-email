@@ -83,7 +83,17 @@ defmodule Rivet.Email do
             Logger.error("Cannot send email; template missing!", template: template)
 
           {:error, {%KeyError{} = e, trace}} ->
-            {:error, {:template, "Template eval failed, assigns missing? #{e.message}", trace}}
+            line =
+              case trace do
+                [{:elixir_eval, :__FILE__, _, [file: 'nofile', line: line]} | _] ->
+                  "Line #{line}: "
+
+                _ ->
+                  ""
+              end
+
+            {:error,
+             {:template, "Template eval failed, assigns missing? #{line}#{e.message}", trace}}
 
           other ->
             Logger.debug("error processing template", error: other)

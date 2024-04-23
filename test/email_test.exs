@@ -8,7 +8,8 @@ defmodule Rivet.Email.Test do
 
   test "send via template" do
     assert capture_log(fn ->
-             assert {:ok, ["email disabled"]} = Mailer.Template.sendto(Mailer.User.mock(), tester: "testing")
+             assert {:ok, ["email disabled"]} =
+                      Mailer.Template.sendto(Mailer.User.mock(), tester: "testing")
            end) =~ ~r/Subject: test subject/
   end
 end
