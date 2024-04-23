@@ -87,7 +87,7 @@ defmodule Rivet.Email do
             line =
               case trace do
                 [{:elixir_eval, :__FILE__, _, [file: 'nofile', line: line]} | _] ->
-                  "[line #{line}] "
+                  "Line #{line}: "
 
                 _ ->
                   ""
