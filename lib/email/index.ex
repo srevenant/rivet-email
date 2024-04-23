@@ -92,12 +92,11 @@ defmodule Rivet.Email do
                   ""
               end
 
-            {:error,
-             {:template, "Template eval failed, assigns missing? #{line}#{e.message}", trace}}
+            {:error, {:eval, "#{line}#{e.message}", trace}}
 
           other ->
             Logger.debug("error processing template", error: other)
-            {:error, {:template, "Unknown template error", other}}
+            {:error, {:unknown, other}}
         end
       end
 
