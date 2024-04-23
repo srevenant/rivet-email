@@ -93,6 +93,7 @@ defmodule Rivet.Email do
                   ""
               end
 
+            IO.inspect(e)
             {:error, {:eval, "#{line}#{e.message}", trace}}
 
           other ->
