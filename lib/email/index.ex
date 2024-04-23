@@ -81,10 +81,12 @@ defmodule Rivet.Email do
           {:error, "Nothing found"} ->
             Logger.error("Cannot send email; template missing!", template: template)
 
+          {:error, %KeyError{} = e, trace} ->
+            {:error, {:template, "Template eval failed, @#{e.key} missing? #{e.message}", trace}}
+
           other ->
             Logger.debug("error processing template", error: other)
-            IO.inspect(other)
-            {:error, :invalid_template_result}
+            {:error, {:template, "Unknown template error", other}}
         end
       end
 
