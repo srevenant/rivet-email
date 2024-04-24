@@ -15,8 +15,6 @@ defmodule Rivet.Email do
       @type user_id() :: String.t()
       @type email_recipient() :: email_model() | user_model() | user_id()
 
-      # future: changes assigns to opts and allow for more than just 'site'
-      # config data to be imported from Db
       def sendto(recips, template, assigns \\ [], configs \\ [])
 
       def sendto([], template, assigns, configs),
@@ -56,7 +54,6 @@ defmodule Rivet.Email do
         with {:ok, cfgs} <- Enum.reduce_while(configs, {:ok, %{}}, &reduce_load_config/2) do
           assigns = Map.merge(cfgs, Map.new(assigns))
 
-          # site config is merged into one, allowing assigns to override things
           case get_in(assigns, @from_key) do
             nil -> {:error, "Sender email address is missing from assigns (@#{Enum.join(@from_key, ".")})"}
             [name, email] -> {:ok, put_in(assigns, @from_key, {name, email})}
@@ -64,6 +61,11 @@ defmodule Rivet.Email do
           end
         end
       end
+
+      ##########################################################################
+      defp eex_lineno([{:elixir_eval, :__FILE__, _, [file: 'nofile', line: line]} | _]), do:
+                        "Line #{line}: "
+      defp eex_lineno(_), do: ""
 
       ##########################################################################
       @spec deliver(recipient :: any(), template :: atom(), assigns :: map()) ::
@@ -84,17 +86,12 @@ defmodule Rivet.Email do
             Logger.error("Cannot send email; template missing!", template: template)
 
           {:error, {%KeyError{} = e, trace}} ->
-            line =
-              case trace do
-                [{:elixir_eval, :__FILE__, _, [file: 'nofile', line: line]} | _] ->
-                  "Line #{line}: "
-
-                _ ->
-                  ""
-              end
-
-            IO.inspect(e)
+            line = eex_lineno(trace)
             {:error, {:eval, "#{line}assigns key missing: #{e.key} #{e.message}", trace}}
+
+          {:error, {%UndefinedFunctionError{} = e, trace}} ->
+            line = eex_lineno(trace)
+            {:error, {:eval, "#{line}undefined function: #{e.function}/#{e.arity} #{e.message}", trace}}
 
           other ->
             Logger.debug("error processing template", error: other)
