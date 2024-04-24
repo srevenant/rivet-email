@@ -63,9 +63,20 @@ defmodule Rivet.Email do
       end
 
       ##########################################################################
-      defp eex_lineno([{:elixir_eval, :__FILE__, _, [file: 'nofile', line: line]} | _]), do:
-                        "Line #{line}: "
-      defp eex_lineno(_), do: ""
+      defp eex_lineno(trace) do
+        Enum.reduce_while(trace, stack, fn
+          {:elixir_eval, :__FILE__, _, [file: 'nofile', line: line]}, stack ->
+            {:halt, {:ok, "Line #{line}: ", stack}}
+          line -> {:cont, [line | stack]}
+        end)
+        |> case do
+          {:ok, l, s}  -> {l, s}
+          x when is_list(x) ->
+            IO.inspect(trace)
+            Logger.warning("Could not find eval line in stack trace")
+            {"", []}
+        end
+      end
 
       ##########################################################################
       @spec deliver(recipient :: any(), template :: atom(), assigns :: map()) ::
@@ -86,11 +97,11 @@ defmodule Rivet.Email do
             Logger.error("Cannot send email; template missing!", template: template)
 
           {:error, {%KeyError{} = e, trace}} ->
-            line = eex_lineno(trace)
+            {line, trace} = eex_lineno(trace)
             {:error, {:eval, "#{line}assigns key missing: #{e.key} #{e.message}", trace}}
 
           {:error, {%UndefinedFunctionError{} = e, trace}} ->
-            line = eex_lineno(trace)
+            {line, trace} = eex_lineno(trace)
             {:error, {:eval, "#{line}undefined function: #{e.function}/#{e.arity} #{e.message}", trace}}
 
           other ->
