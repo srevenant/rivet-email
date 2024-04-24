@@ -64,10 +64,10 @@ defmodule Rivet.Email do
 
       ##########################################################################
       defp eex_lineno(trace) do
-        Enum.reduce_while(trace, stack, fn
+        Enum.reduce_while(trace, [], fn
           {:elixir_eval, :__FILE__, _, [file: 'nofile', line: line]}, stack ->
             {:halt, {:ok, "Line #{line}: ", stack}}
-          line -> {:cont, [line | stack]}
+          line, stack -> {:cont, [line | stack]}
         end)
         |> case do
           {:ok, l, s}  -> {l, s}
