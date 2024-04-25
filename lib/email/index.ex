@@ -55,9 +55,15 @@ defmodule Rivet.Email do
           assigns = Map.merge(cfgs, Map.new(assigns))
 
           case get_in(assigns, @from_key) do
-            nil -> {:error, "Sender email address is missing from assigns (@#{Enum.join(@from_key, ".")})"}
-            [name, email] -> {:ok, put_in(assigns, @from_key, {name, email})}
-            from -> {:ok, put_in(assigns, @from_key, from)}
+            nil ->
+              {:error,
+               "Sender email address is missing from assigns (@#{Enum.join(@from_key, ".")})"}
+
+            [name, email] ->
+              {:ok, put_in(assigns, @from_key, {name, email})}
+
+            from ->
+              {:ok, put_in(assigns, @from_key, from)}
           end
         end
       end
@@ -67,10 +73,14 @@ defmodule Rivet.Email do
         Enum.reduce_while(trace, [], fn
           {:elixir_eval, :__FILE__, _, [file: 'nofile', line: line]}, stack ->
             {:halt, {:ok, "Line #{line}: ", stack}}
-          line, stack -> {:cont, [line | stack]}
+
+          line, stack ->
+            {:cont, [line | stack]}
         end)
         |> case do
-          {:ok, l, s}  -> {l, s}
+          {:ok, l, s} ->
+            {l, s}
+
           x when is_list(x) ->
             IO.inspect(trace)
             Logger.warning("Could not find eval line in stack trace")
@@ -100,9 +110,20 @@ defmodule Rivet.Email do
             {line, trace} = eex_lineno(trace)
             {:error, {:eval, "#{line}assigns key missing: #{e.key} #{e.message}", trace}}
 
+          {:error, {%Protocol.UndefinedError{} = e, trace}} ->
+            {line, trace} = eex_lineno(trace)
+            {:error, {:eval, "#{line}Protocol error: #{inspect(e)}", trace}}
+
           {:error, {%UndefinedFunctionError{} = e, trace}} ->
             {line, trace} = eex_lineno(trace)
-            {:error, {:eval, "#{line}undefined function: #{e.function}/#{e.arity} #{e.message}", trace}}
+
+            {:error,
+             {:eval, "#{line}undefined function: #{e.function}/#{e.arity} #{e.message}", trace}}
+
+          # note for future reference: the EEX engine doesn't currently allow
+          # for handling @assigns missing at the top level. There is a note to
+          # have this be a future v2.0 thing, but until then we only get logged
+          # messages, alas.
 
           other ->
             Logger.debug("error processing template", error: other)
