@@ -1,26 +1,13 @@
 defmodule Rivet.Email do
-  @moduledoc """
-  send(recips, template)
-  send(recips, template, assigns)
-
-  For each good recipient call template.format(%@email_model{}, assigns),
-  where email.user is preloaded on %@email_model{}
-
-  - `recips` can be one or list of: user id, a `user_model`, or a `email_model`
-  - `assigns` (optional) is a dictionary with key/value attributes to use in the template
-
-  Returns a tuple of :ok or :error with a list of results from each send.
-  It will stop at the first error, however, and not continue.
-  """
-
   def mailer(), do: Application.get_env(:rivet_email, :mailer)
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
+      @from_key Keyword.get(opts, :from_key, [:email_from])
       @user_model Keyword.get(opts, :user_model, Rivet.Ident.User)
       @email_model Keyword.get(opts, :email_model, Rivet.Ident.Email)
-      @site_key Keyword.get(opts, :rivet_email_data, :rivet_email_data)
       @backend Keyword.get(opts, :backend)
+      @configurator Keyword.get(opts, :configurator)
       require Logger
 
       @type email_model() :: @email_model.t()
@@ -28,9 +15,14 @@ defmodule Rivet.Email do
       @type user_id() :: String.t()
       @type email_recipient() :: email_model() | user_model() | user_id()
 
-      def send(recips, template, assigns \\ []) do
+      def sendto(recips, template, assigns \\ [], configs \\ [])
+
+      def sendto([], template, assigns, configs),
+        do: Logger.error("Cannot send email to no recipients!", template: template)
+
+      def sendto(recips, template, assigns, configs) do
         with {:ok, emails} <- get_emails(recips),
-             {:ok, assigns} <- generate_assigns(assigns) do
+             {:ok, assigns} <- generate_assigns(assigns, configs) do
           send_all(emails, template, assigns, [])
         end
       end
@@ -39,22 +31,60 @@ defmodule Rivet.Email do
       defp send_all([recip | rest], template, assigns, out) when is_map(assigns) do
         case deliver(recip, template, assigns) do
           {:ok, result} -> send_all(rest, template, assigns, [result | out])
-          error -> {:error, error, [out] |> Enum.reverse()}
+          {:error, error} -> {:error, error, [out] |> Enum.reverse()}
+          # other -> {:error, other, [out] |> Enum.reverse()}
         end
       end
 
       defp send_all([], _, _, out), do: {:ok, Enum.reverse(out)}
 
       ##########################################################################
-      defp generate_assigns(assigns) do
-        assigns =
-          Map.new(assigns)
-          |> Map.put(:site, Application.get_env(:rivet_email, :site) |> Map.new())
+      # future: for scale of thousands/second, add a read-through cache with Rivet lazy cache
+      defp get_config(name), do: @configurator.get(name)
 
-        case Map.get_lazy(assigns, :email_from, fn -> get_in(assigns, [:site, :email_from]) end) do
-          nil -> {:error, ":email_from missing"}
-          [name, email] -> {:ok, Map.put(assigns, :email_from, {name, email})}
-          from -> {:ok, Map.put(assigns, :email_from, from)}
+      defp reduce_load_config(name, {:ok, cfgs}) do
+        case get_config(name) do
+          {:ok, config} -> {:cont, {:ok, Map.merge(cfgs, config)}}
+          {:error, :not_found} -> {:halt, {:error, "Email Configuration not found: #{name}"}}
+        end
+      end
+
+      ##########################################################################
+      def generate_assigns(assigns, configs) do
+        with {:ok, cfgs} <- Enum.reduce_while(configs, {:ok, %{}}, &reduce_load_config/2) do
+          assigns = Map.merge(cfgs, Map.new(assigns))
+
+          case get_in(assigns, @from_key) do
+            nil ->
+              {:error,
+               "Sender email address is missing from assigns (@#{Enum.join(@from_key, ".")})"}
+
+            [name, email] ->
+              {:ok, put_in(assigns, @from_key, {name, email})}
+
+            from ->
+              {:ok, put_in(assigns, @from_key, from)}
+          end
+        end
+      end
+
+      ##########################################################################
+      defp eex_lineno(trace) do
+        Enum.reduce_while(trace, [], fn
+          {:elixir_eval, :__FILE__, _, [file: 'nofile', line: line]}, stack ->
+            {:halt, {:ok, "Line #{line}: ", stack}}
+
+          line, stack ->
+            {:cont, [line | stack]}
+        end)
+        |> case do
+          {:ok, l, s} ->
+            {l, s}
+
+          x when is_list(x) ->
+            IO.inspect(trace)
+            Logger.warning("Could not find eval line in stack trace")
+            {"", []}
         end
       end
 
@@ -62,11 +92,12 @@ defmodule Rivet.Email do
       @spec deliver(recipient :: any(), template :: atom(), assigns :: map()) ::
               {:ok, Swoosh.Email.t()} | {:error, term()}
       def deliver(%@email_model{} = recipient, template, assigns) do
-        assigns = Map.put(assigns, :target, recipient)
+        # the only magic value
+        assigns = Map.put(assigns, :recipient, recipient)
 
         case template.generate(recipient, assigns) do
           {:ok, subject, body} ->
-            Swoosh.Email.new(to: recipient.address, from: assigns.email_from)
+            Swoosh.Email.new(to: recipient.address, from: get_in(assigns, @from_key))
             |> Swoosh.Email.subject(subject)
             |> Swoosh.Email.html_body("<html><body>#{body}</body></html>")
             |> Swoosh.Email.text_body(Rivet.Email.Template.html2text(body))
@@ -74,11 +105,30 @@ defmodule Rivet.Email do
 
           {:error, "Nothing found"} ->
             Logger.error("Cannot send email; template missing!", template: template)
+            {:error, "template missing"}
+
+          {:error, {%KeyError{} = e, trace}} ->
+            {line, trace} = eex_lineno(trace)
+            {:error, {:eval, "#{line}assigns key missing: #{e.key} #{e.message}", trace}}
+
+          {:error, {%Protocol.UndefinedError{} = e, trace}} ->
+            {line, trace} = eex_lineno(trace)
+            {:error, {:eval, "#{line}Protocol error: #{inspect(e)}", trace}}
+
+          {:error, {%UndefinedFunctionError{} = e, trace}} ->
+            {line, trace} = eex_lineno(trace)
+
+            {:error,
+             {:eval, "#{line}undefined function: #{e.function}/#{e.arity} #{e.message}", trace}}
+
+          # note for future reference: the EEX engine doesn't currently allow
+          # for handling @assigns missing at the top level. There is a note to
+          # have this be a future v2.0 thing, but until then we only get logged
+          # messages, alas.
 
           other ->
             Logger.debug("error processing template", error: other)
-            IO.inspect(other)
-            {:error, :invalid_template_result}
+            {:error, {:unknown, other}}
         end
       end
 
@@ -133,15 +183,15 @@ defmodule Rivet.Email do
 
       ##########################################################################
       @spec get_email(email_recipient()) :: {:ok, email_model()} | {:error, reason :: any()}
-      defp get_email(%@email_model{} = email) do
-        with {:ok, %@email_model{} = email} <- @email_model.preload(email, :user) do
+      def get_email(%@email_model{} = email) do
+        with {:ok, %@email_model{} = email} <- @email_model.preload(email, [:user]) do
           {:ok, email}
         end
       end
 
       # TODO: verified should be a settable option
-      defp get_email(%@user_model{} = user) do
-        with {:ok, %@user_model{emails: emails}} <- @user_model.preload(user, :emails) do
+      def get_email(%@user_model{} = user) do
+        with {:ok, %@user_model{emails: emails}} <- @user_model.preload(user, [:emails]) do
           case Enum.find(emails, fn e -> e.verified end) do
             %@email_model{} = email ->
               {:ok, %@email_model{email | user: user}}
@@ -157,7 +207,7 @@ defmodule Rivet.Email do
         end
       end
 
-      defp get_email(user_id) when is_binary(user_id) do
+      def get_email(user_id) when is_binary(user_id) do
         with {:ok, user} <- @user_model.one(user_id) do
           get_email(user)
         end

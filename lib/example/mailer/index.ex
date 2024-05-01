@@ -8,6 +8,7 @@ defmodule Rivet.Email.Example.Mailer do
   use Rivet.Email,
     otp_app: :rivet_email,
     backend: Mailer.Backend,
+    configurator: Mailer.Configurator,
     # using something besides Ident.User/Email
     user_model: Mailer.User,
     email_model: Mailer.Email

@@ -1,4 +1,4 @@
-defmodule Rivet.Email.TemplateTest do
+defmodule Rivet.Email.EvalTemplateTest do
   use ExUnit.Case
 
   doctest Rivet.Email.Template, import: true
@@ -22,10 +22,13 @@ defmodule Rivet.Email.TemplateTest do
   end
 
   test "handle bad" do
-    assert {:error, {%{message: "expected closing '%>' for EEx expression\n  |\n1 | <% import Elixir.Rivet.Email.Template.Helpers;import Transmogrify;import Transmogrify.As %><p>\n2 | This is a message body for <%= @email %>\n3 | <%= bad \n  | ^"}, _}} =
+    assert {:error, {%{message: msg}, _}} =
              Rivet.Email.Test.Template.eval(@template <> "<%= bad ", "nobody@example.com", %{
                something: "reset"
              })
+
+    # depending on the elixir version the message is different
+    assert msg =~ ~r/expected closing/ or msg =~ ~r/missing token/
 
     assert {:error, {%{file: "nofile", description: "syntax error: expression is incomplete"}, _}} =
              Rivet.Email.Test.Template.eval(@template <> "<%= ! %> ", "nobody@example.com", %{

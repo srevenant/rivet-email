@@ -1,5 +1,5 @@
 defmodule Rivet.Email.Example.Mailer.Template do
-  use Rivet.Email.Template
+  use Rivet.Email.Template, assigns: [email_from: "narf@example.com"], configs: []
 
   # override generate to use local data instead of db template
   @impl Rivet.Email.Template
