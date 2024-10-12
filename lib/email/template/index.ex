@@ -19,33 +19,10 @@ defmodule Rivet.Email.Template do
 
   @doc ~S"""
   iex> html2text("<b>an html doc</b><p><h1>Header</h1>")
-  "an html doc\r\n\r\n\r\n# Header\r\n"
+  "**an html doc** \n# Header"
   """
   @spec html2text(html :: String.t()) :: text :: String.t()
-  def html2text(html) do
-    # doesn't have to be pretty, very few will actually see it
-    html
-    |> preserve_links()
-    |> String.replace(~r/<\s*h(.)\s*>/im, "\r\n\r\n# ", global: true)
-    |> String.replace(~r/<\/\s*h(.)\s*>/im, "\r\n", global: true)
-    |> String.replace(~r/<li>/im, "\\g{1}- ", global: true)
-    |> String.replace(~r/<\/?\s*(br|p|div|h.)\s*\/?>/im, "\r\n", global: true)
-    |> HtmlSanitizeEx.strip_tags()
-  end
-
-  @doc ~S"""
-  iex> preserve_links("<a href=\"foo\">bar</a> baz <a href=\"narf\">bork</a>.")
-  "bar<foo> baz bork<narf>."
-  iex> preserve_links("<a href=\"foo\">bar</a> baz")
-  "bar<foo> baz"
-  """
-  def preserve_links(str) do
-    Regex.replace(
-      ~r/<a[^>]+href="([^"]+)">([^<]+)<\/a>/,
-      str,
-      fn _, url, text -> "#{text}<#{url}>" end
-    )
-  end
+  def html2text(html), do: Html2Markdown.convert(html)
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do

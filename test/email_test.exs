@@ -3,7 +3,6 @@ defmodule Rivet.Email.Test do
   import ExUnit.CaptureLog
   alias Rivet.Email.Example.Mailer
 
-  doctest Rivet.Email.Template, import: true
   doctest Rivet.Email, import: true
 
   test "send via template" do

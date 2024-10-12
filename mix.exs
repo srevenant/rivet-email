@@ -5,7 +5,7 @@ defmodule RivetEmail.MixProject do
   def project do
     [
       app: :rivet_email,
-      version: "2.0.0",
+      version: "2.0.1",
       package: package(),
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -55,7 +55,7 @@ defmodule RivetEmail.MixProject do
       {:excoveralls, "~> 0.14", only: :test, runtime: false},
       {:faker, "~> 0.10", only: :test, runtime: false},
       {:gen_smtp, "~> 1.2.0"},
-      {:html_sanitize_ex, "~> 1.4"},
+      {:html2markdown, "~> 0.1.5"},
       {:jason, "~> 1.0"},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:rivet, "~> 2.2"},
@@ -73,7 +73,7 @@ defmodule RivetEmail.MixProject do
 
   defp package() do
     [
-      files: ~w(lib .formatter.exs mix.exs priv README* LICENSE*),
+      files: ~w(lib .formatter.exs mix.exs priv/rivet README* LICENSE*),
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => @source_url},
       source_url: @source_url
