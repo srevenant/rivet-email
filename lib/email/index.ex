@@ -103,7 +103,7 @@ defmodule Rivet.Email do
             |> Swoosh.Email.text_body(Rivet.Email.Template.html2text(body))
             |> send_email()
 
-          {:error, "Nothing found"} ->
+          {:error, :not_found} ->
             Logger.error("Cannot send email; template missing!", template: template)
             {:error, "template missing"}
 
