@@ -30,9 +30,12 @@ defmodule Rivet.Email do
       ##########################################################################
       defp send_all([recip | rest], template, assigns, out) when is_map(assigns) do
         case deliver(recip, template, assigns) do
-          {:ok, result} -> send_all(rest, template, assigns, [result | out])
-          {:error, error} -> {:error, error, [out] |> Enum.reverse()}
-          # other -> {:error, other, [out] |> Enum.reverse()}
+          {:ok, result} ->
+            send_all(rest, template, assigns, [result | out])
+
+          {:error, error} ->
+            {:error, error, [out] |> Enum.reverse()}
+            # other -> {:error, other, [out] |> Enum.reverse()}
         end
       end
 
@@ -71,7 +74,7 @@ defmodule Rivet.Email do
       ##########################################################################
       defp eex_lineno(trace) do
         Enum.reduce_while(trace, [], fn
-          {:elixir_eval, :__FILE__, _, [file: 'nofile', line: line]}, stack ->
+          {:elixir_eval, :__FILE__, _, [file: ~c"nofile", line: line]}, stack ->
             {:halt, {:ok, "Line #{line}: ", stack}}
 
           line, stack ->
