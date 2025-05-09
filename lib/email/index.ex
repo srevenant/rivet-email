@@ -39,11 +39,8 @@ defmodule Rivet.Email do
       defp send_all([], _, _, out), do: {:ok, Enum.reverse(out)}
 
       ##########################################################################
-      # future: for scale of thousands/second, add a read-through cache with Rivet lazy cache
-      defp get_config(name), do: @configurator.get(name)
-
       defp reduce_load_config(name, {:ok, cfgs}) do
-        case get_config(name) do
+        case @configurator.get_config(name) do
           {:ok, config} -> {:cont, {:ok, Map.merge(cfgs, config)}}
           {:error, :not_found} -> {:halt, {:error, "Email Configuration not found: #{name}"}}
         end
