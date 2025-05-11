@@ -10,28 +10,14 @@ defmodule Rivet.Email.Configurator do
 
       # named site, not base
       def get_key(<<site::binary>>, key) do
-        with :error <- get_config_key_("site/#{site}", key),
+        with :error <- get_config_key_(site, key),
           do: get_config_key_("site", key)
       end
 
       # similarly, but for the full config
       def get_config("site"), do: get_config_("site")
       def get_config(<<name::binary>>) do
-        with {:ok, sitecfg} <- get_config_("site") do
-          case get_config_("site/#{name}") do
-            :error -> {:ok, sitecfg}
-            {:ok, namedcfg} -> deepishmerge(sitecfg, namedcfg)
-          end
-        end
-      end
-
-      # 1 level deep merge
-      defp deepishmerge(map1, map2) do
-        Map.merge(map1, map2, fn
-          _, m1, m2 when is_map(m1) and is_map(m2) ->
-            Map.merge(m1, m2)
-          _, _, v2 -> v2
-        end)
+        with :error <- get_config_(name), do: get_config_("site")
       end
 
       ##########################################################################
