@@ -42,9 +42,7 @@ defmodule Rivet.Email do
       defp reduce_load_config(name, {:ok, cfgs}) do
         case @configurator.get_config(name) do
           {:ok, config} -> {:cont, {:ok, Map.merge(cfgs, config)}}
-          {:error, :not_found} -> {:halt, {:error, "Email Configuration not found: #{name}"}}
-          # Jason decode error in some bad cases
-          {:error, err} -> {:halt, {:error, inspect(err)}}
+          {:error, e} -> {:halt, {:error, "Email Configuration not found: #{inspect(e)}"}}
         end
       end
 
