@@ -3,56 +3,60 @@ defmodule Rivet.Email.Configurator do
     quote location: :keep, bind_quoted: [opts: opts] do
       use Rivet.Utils.LazyCache
 
-      @persist_for 600_000
+      def get_key(a, b), do: Rivet.Email.Configurator.get_key_(__MODULE__, a, b)
+      def get_config(a), do: Rivet.Email.Configurator.get_config_(__MODULE__, a)
+    end
+  end
 
-      # base config for all sites
-      def get_key("site", key), do: get_config_key_("site", key)
+  @persist_for 600_000
 
-      # named site, not base
-      def get_key(<<site::binary>>, key) do
-        with :error <- get_config_key_(site, key),
-          do: get_config_key_("site", key)
-      end
+  ##############################################################################
+  # base config for all sites
+  def get_key_(parent, "site", key), do: get_config_key_(parent, "site", key)
 
-      # similarly, but for the full config
-      def get_config("site"), do: get_config_("site")
-      def get_config(<<name::binary>>) do
-        with :error <- get_config_(name), do: get_config_("site")
-      end
+  # named site, not base
+  def get_key_(parent, <<site::binary>>, key) do
+    with :error <- get_config_key_(parent, site, key),
+         do: get_config_key_(parent, "site", key)
+  end
 
-      ##########################################################################
-      defp get_config_key_(cfgname, key) do
-        with {:ok, cfg} <- get_config_(cfgname),
-          do: get_in_(cfg, key)
-      end
+  # similarly, but for the full config
+  def get_config_(parent, "site"), do: get_config__(parent, "site")
 
-      defp get_in_(cfg, key) when is_map(cfg) do
-        case get_in(cfg, key) do
-          nil -> :error
-          value -> {:ok, value}
-        end
-      end
+  def get_config_(parent, <<name::binary>>) do
+    with :error <- get_config__(parent, name), do: get_config__(parent, "site")
+  end
 
+  ##########################################################################
+  defp get_config_key_(parent, cfgname, key) when is_list(key) do
+    with {:ok, cfg} <- get_config__(parent, cfgname),
+         do: get_in_(cfg, key)
+  end
 
-      def get_config_(cfgname) do
-        case lookup(cfgname) do
-          [{_, target, _}] ->
-            {:ok, target}
+  defp get_in_(cfg, key) when is_map(cfg) do
+    case get_in(cfg, key) do
+      nil -> :error
+      value -> {:ok, value}
+    end
+  end
+
+  def get_config__(parent, cfgname) do
+    case parent.lookup(cfgname) do
+      [{_, target, _}] ->
+        {:ok, target}
+
+      _ ->
+        case Rivet.Email.Template.one(name: "//CONFIG/#{cfgname}") do
+          {:ok, c} ->
+            with {:ok, data} <- Jason.decode(c.data) do
+              data = Transmogrify.transmogrify(data)
+              parent.insert(cfgname, data, @persist_for)
+              {:ok, data}
+            end
 
           _ ->
-            case Rivet.Email.Template.one(name: "//CONFIG/#{cfgname}") do
-              {:ok, c} ->
-                with {:ok, data} <- Jason.decode(c.data) do
-                  data = Transmogrify.transmogrify(data)
-                  insert(cfgname, data, @persist_for)
-                  {:ok, data}
-                end
-
-              _ ->
-                :error
-            end
+            :error
         end
-      end
     end
   end
 end

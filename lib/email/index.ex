@@ -1,8 +1,184 @@
 defmodule Rivet.Email do
+  require Logger
+
+  ##############################################################################
   def mailer(), do: Application.get_env(:rivet_email, :mailer)
+
+  @spec sendto_(map(), list(any()), Rivet.Email.Template.t(), list(), list()) ::
+          {:error, String.t()} | {:error, String.t(), list()} | {:ok, results :: list(String.t())}
+  def sendto_(_state, [], template, _assigns, _configs) do
+    msg = "Cannot send email to no recipients!"
+    Logger.error(msg, template: template)
+    {:error, msg}
+  end
+
+  def sendto_(state, recips, template, assigns, configs) do
+    with {:ok, emails} <- get_emails_(state, recips),
+         {:ok, assigns} <- generate_assigns_(state, assigns, configs) do
+      send_all_(state, emails, template, assigns, [])
+    end
+  end
+
+  ##########################################################################
+  defp send_all_(state, [recip | rest], template, assigns, out) when is_map(assigns) do
+    case deliver_(state, recip, template, assigns) do
+      {:ok, result} -> send_all_(state, rest, template, assigns, [result | out])
+      {:error, error} -> {:error, error, [out] |> Enum.reverse()}
+    end
+  end
+
+  defp send_all_(_, [], _, _, out), do: {:ok, Enum.reverse(out)}
+
+  ##########################################################################
+  defp reduce_load_config_(state, name, {:ok, cfgs}) do
+    case state.config.get_config(name) do
+      {:ok, config} -> {:cont, {:ok, Map.merge(cfgs, config)}}
+      {:error, e} -> {:halt, {:error, "Email Configuration not found: #{inspect(e)}"}}
+    end
+  end
+
+  ##########################################################################
+  def generate_assigns_(state, assigns, configs) do
+    with {:ok, cfgs} <-
+           Enum.reduce_while(configs, {:ok, %{}}, &reduce_load_config_(state, &1, &2)) do
+      assigns = Map.merge(cfgs, Map.new(assigns))
+
+      case get_in(assigns, state.from) do
+        nil ->
+          {:error,
+           "Sender email address is missing from assigns (@#{Enum.join(state.from, ".")})"}
+
+        [name, email] ->
+          {:ok, put_in(assigns, state.from, {name, email})}
+
+        from ->
+          {:ok, put_in(assigns, state.from, from)}
+      end
+    end
+  end
+
+  ##########################################################################
+  defp eex_lineno(trace) do
+    Enum.reduce_while(trace, [], fn
+      {:elixir_eval, :__FILE__, _, [file: ~c"nofile", line: line]}, stack ->
+        {:halt, {:ok, "Line #{line}: ", stack}}
+
+      line, stack ->
+        {:cont, [line | stack]}
+    end)
+    |> case do
+      {:ok, l, s} ->
+        {l, s}
+
+      x when is_list(x) ->
+        IO.inspect(trace)
+        Logger.warning("Could not find eval line in stack trace")
+        {"", []}
+    end
+  end
+
+  ##########################################################################
+  @spec deliver_(map(), recipient :: any(), template :: atom(), assigns :: map()) ::
+          {:ok, Swoosh.Email.t()} | {:error, term()}
+  def deliver_(state, recipient, template, assigns) do
+    # the only magic value
+    assigns = Map.put(assigns, :recipient, recipient)
+
+    case template.generate(recipient, assigns) do
+      {:ok, subject, body} ->
+        Swoosh.Email.new(to: recipient.address, from: get_in(assigns, state.from))
+        |> Swoosh.Email.subject(subject)
+        |> Swoosh.Email.html_body("<html><body>#{body}</body></html>")
+        |> Swoosh.Email.text_body(Rivet.Email.Template.html2text(body))
+        |> send_email_(state)
+
+      {:error, :not_found} ->
+        Logger.error("Cannot send email; template missing!", template: template)
+        {:error, "template missing"}
+
+      {:error, {%KeyError{} = e, trace}} ->
+        {line, trace} = eex_lineno(trace)
+        {:error, {:eval, "#{line}assigns key missing: #{e.key} #{e.message}", trace}}
+
+      {:error, {%Protocol.UndefinedError{} = e, trace}} ->
+        {line, trace} = eex_lineno(trace)
+        {:error, {:eval, "#{line}Protocol error: #{inspect(e)}", trace}}
+
+      {:error, {%UndefinedFunctionError{} = e, trace}} ->
+        {line, trace} = eex_lineno(trace)
+
+        {:error,
+         {:eval, "#{line}undefined function: #{e.function}/#{e.arity} #{e.message}", trace}}
+
+      # note for future reference: the EEX engine doesn't currently allow
+      # for handling @assigns missing at the top level. There is a note to
+      # have this be a future v2.0 thing, but until then we only get logged
+      # messages, alas.
+
+      other ->
+        Logger.debug("error processing template", error: other)
+        {:error, {:unknown, other}}
+    end
+  end
+
+  ##########################################################################
+  def send_email_(%Swoosh.Email{to: [{_, eaddr} = addr], subject: subj} = email, state) do
+    if Application.get_env(:rivet_email, :enabled) do
+      if String.ends_with?("@example.com", eaddr) do
+        {:error, :example_email}
+      else
+        Logger.debug("sending email", to: eaddr, from: email.from, subject: subj)
+        # note: Swoosh.deliver returns {:ok, "string"}
+        state.backend.deliver(email)
+      end
+    else
+      Logger.warning("Email disabled, not sending message to #{inspect(addr)}", subject: subj)
+      log_email(email)
+      {:ok, "email disabled"}
+    end
+  end
+
+  ##########################################################################
+  def log_email(%Swoosh.Email{} = email) do
+    Logger.warning("""
+    Subject: #{email.subject}
+    --- html
+    #{email.html_body}
+    --- text
+    #{email.text_body}
+    """)
+  end
+
+  ##########################################################################
+  # email_recipient() | list(email_recipient)) ::
+  @spec get_emails_(map(), map() | list(map())) ::
+          {:ok, list(map())} | {:error, String.t(), term()}
+
+  def get_emails_(state, recip, out \\ [])
+
+  def get_emails_(state, [recip | recips], out) do
+    case state.this.get_email(recip) do
+      {:ok, email} ->
+        get_emails_(state, recips, [email | out])
+
+      {:error, %{reason: :no_email, user: user}} ->
+        {:error, "Unable to load email for user, cannot send email", user: user.id}
+
+      err ->
+        {:error, "Unable to find email", err}
+    end
+  end
+
+  def get_emails_(_, [], out), do: {:ok, out}
+  def get_emails_(state, recip, out), do: get_emails_(state, [recip], out)
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
+      @type user_id() :: String.t()
+      @type email_model() :: @email_model.t()
+      @type user_model() :: @user_model.t()
+      @type email_recipient() :: email_model() | user_model() | user_id()
+
       @from_key Keyword.get(opts, :from_key, [:email_from])
       @user_model Keyword.get(opts, :user_model, Rivet.Ident.User)
       @email_model Keyword.get(opts, :email_model, Rivet.Ident.Email)
@@ -10,173 +186,14 @@ defmodule Rivet.Email do
       @configurator Keyword.get(opts, :configurator)
       require Logger
 
-      @type email_model() :: @email_model.t()
-      @type user_model() :: @user_model.t()
-      @type user_id() :: String.t()
-      @type email_recipient() :: email_model() | user_model() | user_id()
-
-      def sendto(recips, template, assigns \\ [], configs \\ [])
-
-      def sendto([], template, assigns, configs),
-        do: Logger.error("Cannot send email to no recipients!", template: template)
-
-      def sendto(recips, template, assigns, configs) do
-        with {:ok, emails} <- get_emails(recips),
-             {:ok, assigns} <- generate_assigns(assigns, configs) do
-          send_all(emails, template, assigns, [])
-        end
-      end
-
-      ##########################################################################
-      defp send_all([recip | rest], template, assigns, out) when is_map(assigns) do
-        case deliver(recip, template, assigns) do
-          {:ok, result} -> send_all(rest, template, assigns, [result | out])
-          {:error, error} -> {:error, error, [out] |> Enum.reverse()}
-          # other -> {:error, other, [out] |> Enum.reverse()}
-        end
-      end
-
-      defp send_all([], _, _, out), do: {:ok, Enum.reverse(out)}
-
-      ##########################################################################
-      defp reduce_load_config(name, {:ok, cfgs}) do
-        case @configurator.get_config(name) do
-          {:ok, config} -> {:cont, {:ok, Map.merge(cfgs, config)}}
-          {:error, e} -> {:halt, {:error, "Email Configuration not found: #{inspect(e)}"}}
-        end
-      end
-
-      ##########################################################################
-      def generate_assigns(assigns, configs) do
-        with {:ok, cfgs} <- Enum.reduce_while(configs, {:ok, %{}}, &reduce_load_config/2) do
-          assigns = Map.merge(cfgs, Map.new(assigns))
-
-          case get_in(assigns, @from_key) do
-            nil ->
-              {:error,
-               "Sender email address is missing from assigns (@#{Enum.join(@from_key, ".")})"}
-
-            [name, email] ->
-              {:ok, put_in(assigns, @from_key, {name, email})}
-
-            from ->
-              {:ok, put_in(assigns, @from_key, from)}
-          end
-        end
-      end
-
-      ##########################################################################
-      defp eex_lineno(trace) do
-        Enum.reduce_while(trace, [], fn
-          {:elixir_eval, :__FILE__, _, [file: 'nofile', line: line]}, stack ->
-            {:halt, {:ok, "Line #{line}: ", stack}}
-
-          line, stack ->
-            {:cont, [line | stack]}
-        end)
-        |> case do
-          {:ok, l, s} ->
-            {l, s}
-
-          x when is_list(x) ->
-            IO.inspect(trace)
-            Logger.warning("Could not find eval line in stack trace")
-            {"", []}
-        end
-      end
-
-      ##########################################################################
-      @spec deliver(recipient :: any(), template :: atom(), assigns :: map()) ::
-              {:ok, Swoosh.Email.t()} | {:error, term()}
-      def deliver(%@email_model{} = recipient, template, assigns) do
-        # the only magic value
-        assigns = Map.put(assigns, :recipient, recipient)
-
-        case template.generate(recipient, assigns) do
-          {:ok, subject, body} ->
-            Swoosh.Email.new(to: recipient.address, from: get_in(assigns, @from_key))
-            |> Swoosh.Email.subject(subject)
-            |> Swoosh.Email.html_body("<html><body>#{body}</body></html>")
-            |> Swoosh.Email.text_body(Rivet.Email.Template.html2text(body))
-            |> send_email()
-
-          {:error, :not_found} ->
-            Logger.error("Cannot send email; template missing!", template: template)
-            {:error, "template missing"}
-
-          {:error, {%KeyError{} = e, trace}} ->
-            {line, trace} = eex_lineno(trace)
-            {:error, {:eval, "#{line}assigns key missing: #{e.key} #{e.message}", trace}}
-
-          {:error, {%Protocol.UndefinedError{} = e, trace}} ->
-            {line, trace} = eex_lineno(trace)
-            {:error, {:eval, "#{line}Protocol error: #{inspect(e)}", trace}}
-
-          {:error, {%UndefinedFunctionError{} = e, trace}} ->
-            {line, trace} = eex_lineno(trace)
-
-            {:error,
-             {:eval, "#{line}undefined function: #{e.function}/#{e.arity} #{e.message}", trace}}
-
-          # note for future reference: the EEX engine doesn't currently allow
-          # for handling @assigns missing at the top level. There is a note to
-          # have this be a future v2.0 thing, but until then we only get logged
-          # messages, alas.
-
-          other ->
-            Logger.debug("error processing template", error: other)
-            {:error, {:unknown, other}}
-        end
-      end
-
-      ##########################################################################
-      def send_email(%Swoosh.Email{to: [{_, eaddr} = addr], subject: subj} = email) do
-        if Application.get_env(:rivet_email, :enabled) do
-          if String.ends_with?("@example.com", eaddr) do
-            {:error, :example_email}
-          else
-            Logger.debug("sending email", to: eaddr, from: email.from, subject: subj)
-            @backend.deliver(email)
-          end
-        else
-          Logger.warning("Email disabled, not sending message to #{inspect(addr)}", subject: subj)
-          log_email(email)
-          {:ok, "email disabled"}
-        end
-      end
-
-      ##########################################################################
-      def log_email(%Swoosh.Email{} = email) do
-        Logger.warning("""
-        Subject: #{email.subject}
-        --- html
-        #{email.html_body}
-        --- text
-        #{email.text_body}
-        """)
-      end
-
-      ##########################################################################
-      # future: assigns can include verfied: true (or some way to only send to verified addresses)
-      @spec get_emails(email_recipient() | list(email_recipient)) ::
-              {:ok, list(email_model())} | {:error, String.t(), term()}
-
-      def get_emails(recip, out \\ [])
-
-      def get_emails([recip | recips], out) do
-        with {:ok, email} <- get_email(recip) do
-          get_emails(recips, [email | out])
-        else
-          {:error, %{reason: :no_email, user: user}} ->
-            {:error, "Unable to load email for user, cannot send email", user: user.id}
-
-          err ->
-            {:error, "Unable to find email", err}
-        end
-      end
-
-      def get_emails([], out), do: {:ok, out}
-      def get_emails(recip, out), do: get_emails([recip], out)
+      @state %{
+        this: __MODULE__,
+        from: @from_key,
+        user: @user_model,
+        email: @email_model,
+        backend: @backend,
+        config: @configurator
+      }
 
       ##########################################################################
       @spec get_email(email_recipient()) :: {:ok, email_model()} | {:error, reason :: any()}
@@ -194,11 +211,9 @@ defmodule Rivet.Email do
               {:ok, %@email_model{email | user: user}}
 
             _ ->
-              with %@email_model{} = email <- List.first(emails) do
-                {:ok, %@email_model{email | user: user}}
-              else
-                _ ->
-                  {:error, :no_email}
+              case List.first(emails) do
+                %@email_model{} = email -> {:ok, %@email_model{email | user: user}}
+                _ -> {:error, :no_email}
               end
           end
         end
@@ -209,6 +224,10 @@ defmodule Rivet.Email do
           get_email(user)
         end
       end
+
+      ##########################################################################
+      def sendto(recips, template, assigns \\ [], configs \\ []),
+        do: Rivet.Email.sendto_(@state, recips, template, assigns, configs)
     end
   end
 end
