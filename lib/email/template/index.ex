@@ -8,11 +8,12 @@ defmodule Rivet.Email.Template do
 
   typed_schema "email_templates" do
     field(:name, Rivet.Utils.Ecto.Atom)
-    field(:data, :string)
+    field(:data, :string, default: "")
     timestamps()
   end
 
   use Rivet.Ecto.Collection,
+    not_found: :atom,
     required: [:name],
     update: [:data, :name],
     unique_constraints: [:name]
