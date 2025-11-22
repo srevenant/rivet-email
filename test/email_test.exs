@@ -26,7 +26,9 @@ defmodule Rivet.Email.Test do
              Mailer.sendto(em, Mailer.Template)
 
     from = [email_from: "nobody@nobody"]
-    assert {:error, "Cannot send email to no recipients!"} = Mailer.sendto([], Mailer.Template, from)
+
+    assert {:error, "Cannot send email to no recipients!"} =
+             Mailer.sendto([], Mailer.Template, from)
 
     assert {:error, "test error", _} =
              Mailer.sendto(erred, Mailer.Template, from, ["narf"])
@@ -35,18 +37,16 @@ defmodule Rivet.Email.Test do
     ## so skip the test for now...
     # assert {:ok, ["test delivered"]} =
     #          Mailer.sendto(em, Mailer.Template, [email_from: ["boop", "nobody@nobody"]])
-
-    assert {:ok, ["test delivered"]} =
-             Mailer.sendto(em, Mailer.Template, from, ["none"])
+    assert {:ok, ["test delivered"]} = Mailer.sendto(em, Mailer.Template, from, [])
   end
 
   test "config" do
-    assert :error = Mailer.Configurator.get_key("nope", [:boop])
+    assert {:error, "no email template for: site"} = Mailer.Configurator.get_key("nope", [:boop])
     assert {:ok, 1} = Mailer.Configurator.get_key("narf", [:boop])
-    assert :error = Mailer.Configurator.get_key("narf", [:nope])
+    assert {:error, "no email template for: site"} = Mailer.Configurator.get_key("narf", [:nope])
     assert {:ok, %{boop: 1}} = Mailer.Configurator.get_config("narf")
     assert {:ok, s} = Rivet.Email.Template.create(%{name: "//CONFIG/site", data: "{\"no\": 0}"})
-    assert :error = Mailer.Configurator.get_key("site", [:boop])
+    assert {:error, :not_found} = Mailer.Configurator.get_key("site", [:boop])
     assert {:ok, %{no: 0}} = Mailer.Configurator.get_config("site")
     Rivet.Email.Template.delete(s)
   end

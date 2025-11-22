@@ -16,7 +16,7 @@ defmodule Rivet.Email.Configurator do
 
   # named site, not base
   def get_key_(parent, <<site::binary>>, key) do
-    with :error <- get_config_key_(parent, site, key),
+    with {:error, _} <- get_config_key_(parent, site, key),
          do: get_config_key_(parent, "site", key)
   end
 
@@ -35,7 +35,7 @@ defmodule Rivet.Email.Configurator do
 
   defp get_in_(cfg, key) when is_map(cfg) do
     case get_in(cfg, key) do
-      nil -> :error
+      nil -> {:error, :not_found}
       value -> {:ok, value}
     end
   end
@@ -55,7 +55,7 @@ defmodule Rivet.Email.Configurator do
             end
 
           _ ->
-            :error
+            {:error, "no email template for: #{cfgname}"}
         end
     end
   end

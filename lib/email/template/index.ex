@@ -20,7 +20,7 @@ defmodule Rivet.Email.Template do
 
   @doc ~S"""
   iex> html2text("<b>an html doc</b><p><h1>Header</h1>")
-  "**an html doc** \n# Header"
+  "**an html doc**\n\n# Header"
   """
   @spec html2text(html :: String.t()) :: text :: String.t()
   def html2text(html), do: Html2Markdown.convert(html)

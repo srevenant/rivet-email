@@ -5,9 +5,9 @@ defmodule RivetEmail.MixProject do
   def project do
     [
       app: :rivet_email,
-      version: "3.1.0",
+      version: "3.2.0",
       package: package(),
-      elixir: "~> 1.13",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],
@@ -55,14 +55,14 @@ defmodule RivetEmail.MixProject do
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:ex_machina, "~> 2.7.0", only: :test, runtime: false},
       {:faker, "~> 0.10", only: :test, runtime: false},
-      {:gen_smtp, "~> 1.2.0"},
-      {:html2markdown, "~> 0.1.5"},
-      {:jason, "~> 1.0"},
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:postgrex, "~> 0.20"},
-      {:rivet, "~> 2.2"},
-      {:swoosh, "~> 1.9"},
-      {:timex, "~> 3.6"},
+      {:gen_smtp, "~> 1.3"},
+      {:html2markdown, "~> 0.3"},
+      {:jason, "~> 1.4"},
+      {:mix_test_watch, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:postgrex, "~> 0.21"},
+      {:rivet, "~> 2.7"},
+      {:swoosh, "~> 1.19"},
+      {:timex, "~> 3.7"},
       {:transmogrify, "~> 2.0.2"}
     ]
   end
