@@ -24,7 +24,7 @@ defmodule Rivet.Email.Configurator do
   def get_config_(parent, "site"), do: get_config__(parent, "site")
 
   def get_config_(parent, <<name::binary>>) do
-    with :error <- get_config__(parent, name), do: get_config__(parent, "site")
+    with {:error, _} <- get_config__(parent, name), do: get_config__(parent, "site")
   end
 
   ##########################################################################
