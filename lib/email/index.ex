@@ -43,7 +43,7 @@ defmodule Rivet.Email do
            Enum.reduce_while(configs, {:ok, %{}}, &reduce_load_config_(state, &1, &2)) do
       assigns = Map.merge(cfgs, Map.new(assigns))
 
-      case get_in(assigns, state.from) do
+      case get_in(assigns, assigns[:from_key] || state.from) do
         nil ->
           {:error,
            "Sender email address is missing from assigns (@#{Enum.join(state.from, ".")})"}
@@ -122,7 +122,7 @@ defmodule Rivet.Email do
   end
 
   ##########################################################################
-  def send_email_(%Swoosh.Email{to: [{_, eaddr} = addr], subject: subj} = email, state) do
+  def send_email_(%Swoosh.Email{to: [{_, eaddr} = addr], from: faddr, subject: subj} = email, state) do
     if Application.get_env(:rivet_email, :enabled) do
       if String.ends_with?("@example.com", eaddr) do
         {:error, :example_email}
@@ -132,7 +132,7 @@ defmodule Rivet.Email do
         state.backend.deliver(email)
       end
     else
-      Logger.warning("Email disabled, not sending message to #{inspect(addr)}", subject: subj)
+      Logger.warning("Email disabled, not sending message from #{inspect(faddr)} to #{inspect(addr)}", subject: subj)
       log_email(email)
       {:ok, "email disabled"}
     end
