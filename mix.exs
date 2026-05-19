@@ -24,7 +24,7 @@ defmodule RivetEmail.MixProject do
       ],
       xref: [exclude: List.wrap(Application.get_env(:rivet, :repo))],
       source_url: @source_url,
-      docs: [main: Rivet.Email],
+      docs: [main: "Rivet.Email"],
       aliases: [c: "compile"],
       description: description()
     ]
@@ -35,7 +35,7 @@ defmodule RivetEmail.MixProject do
       env: [
         rivet: [
           app: :rivet_email,
-          base: "Rivet.Email",
+          base: Rivet.Email,
           models_dir: "email"
         ]
       ],
@@ -51,16 +51,15 @@ defmodule RivetEmail.MixProject do
       # please alphabetize
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.18", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:ex_machina, "~> 2.7.0", only: :test, runtime: false},
       {:excoveralls, "~> 0.18", only: :test, runtime: false},
       {:faker, "~> 0.18", only: :test, runtime: false},
-      {:gen_smtp, "~> 1.2.0"},
-      {:html2markdown, "~> 0.1.5"},
+      {:gen_smtp, "~> 1.3"},
+      {:html2markdown, "~> 0.3"},
       {:jason, "~> 1.4"},
-      {:mix_test_watch, "~> 1.2", only: [:dev, :test], runtime: false},
-      {:rivet, "~> 2.5"},
+      {:mix_test_watch, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:rivet, "~> 2.7"},
       {:swoosh, "~> 1.19"},
       {:timex, "~> 3.7"},
       {:transmogrify, "~> 2.0.2"}
