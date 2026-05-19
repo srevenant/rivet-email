@@ -51,10 +51,10 @@ defmodule RivetEmail.MixProject do
       # please alphabetize
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.18", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:ex_machina, "~> 2.7.0", only: :test, runtime: false},
-      {:faker, "~> 0.10", only: :test, runtime: false},
+      {:excoveralls, "~> 0.18", only: :test, runtime: false},
+      {:faker, "~> 0.18", only: :test, runtime: false},
       {:gen_smtp, "~> 1.3"},
       {:html2markdown, "~> 0.3"},
       {:jason, "~> 1.4"},
