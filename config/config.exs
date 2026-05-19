@@ -30,5 +30,3 @@ config :rivet_email, Rivet.Email.Repo,
   hostname: "localhost",
   log: false,
   pool: Ecto.Adapters.SQL.Sandbox
-
-import_config "#{config_env()}.exs"
