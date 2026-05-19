@@ -7,7 +7,7 @@ defmodule RivetEmail.MixProject do
       app: :rivet_email,
       version: "2.5.0",
       package: package(),
-      elixir: "~> 1.13",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],
@@ -24,7 +24,7 @@ defmodule RivetEmail.MixProject do
       ],
       xref: [exclude: List.wrap(Application.get_env(:rivet, :repo))],
       source_url: @source_url,
-      docs: [main: "Rivet.Email"],
+      docs: [main: Rivet.Email],
       aliases: [c: "compile"],
       description: description()
     ]
@@ -39,7 +39,7 @@ defmodule RivetEmail.MixProject do
           models_dir: "email"
         ]
       ],
-      extra_applications: [:logger, :timex, {:ex_unit, :optional}]
+      extra_applications: [:logger, {:ex_unit, :optional}]
     ]
   end
 
@@ -50,6 +50,8 @@ defmodule RivetEmail.MixProject do
     [
       # please alphabetize
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.18", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:ex_machina, "~> 2.7.0", only: :test, runtime: false},
       {:excoveralls, "~> 0.18", only: :test, runtime: false},
