@@ -5,8 +5,8 @@ defmodule Rivet.Email.Template.Migrations.Base do
   def change do
     create table(:email_templates, primary_key: false) do
       add(:id, :uuid, primary_key: true)
-      add(:name, :string)
-      add(:data, :text)
+      add(:name, :string, default: "")
+      add(:data, :text, default: "")
       timestamps()
     end
   end

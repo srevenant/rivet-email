@@ -59,6 +59,7 @@ defmodule RivetEmail.MixProject do
       {:html2markdown, "~> 0.3"},
       {:jason, "~> 1.4"},
       {:mix_test_watch, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:postgrex, "~> 0.21"},
       {:rivet, "~> 2.7"},
       {:swoosh, "~> 1.19"},
       {:timex, "~> 3.7"},
