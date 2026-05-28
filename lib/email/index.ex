@@ -4,7 +4,13 @@ defmodule Rivet.Email do
   ##############################################################################
   def mailer(), do: Application.get_env(:rivet_email, :mailer)
 
-  @spec sendto_(map(), list(any()), Rivet.Email.Template.t(), list(), list()) ::
+  @spec sendto_(
+          state :: map(),
+          recips :: list(String.t() | map()),
+          atom(),
+          assigns :: keyword(),
+          config :: list(String.t())
+        ) ::
           {:error, String.t()} | {:error, String.t(), list()} | {:ok, results :: list(String.t())}
   def sendto_(_state, [], template, _assigns, _configs) do
     msg = "Cannot send email to no recipients!"
@@ -12,7 +18,8 @@ defmodule Rivet.Email do
     {:error, msg}
   end
 
-  def sendto_(state, recips, template, assigns, configs) when is_atom(template) and is_list(assigns) and is_list(configs) do
+  def sendto_(state, [_ | _] = recips, template, [_ | _] = assigns, [_ | _] = configs)
+      when is_atom(template) do
     with {:ok, emails} <- get_emails_(state, recips),
          {:ok, assigns} <- generate_assigns_(state, assigns, configs) do
       send_all_(state, emails, template, assigns, [])
@@ -123,7 +130,10 @@ defmodule Rivet.Email do
   end
 
   ##########################################################################
-  def send_email_(%Swoosh.Email{to: [{_, eaddr} = addr], from: faddr, subject: subj} = email, state) do
+  def send_email_(
+        %Swoosh.Email{to: [{_, eaddr} = addr], from: faddr, subject: subj} = email,
+        state
+      ) do
     if Application.get_env(:rivet_email, :enabled) do
       if String.ends_with?("@example.com", eaddr) do
         {:error, :example_email}
@@ -133,7 +143,11 @@ defmodule Rivet.Email do
         state.backend.deliver(email)
       end
     else
-      Logger.warning("Email disabled, not sending message from #{inspect(faddr)} to #{inspect(addr)}", subject: subj)
+      Logger.warning(
+        "Email disabled, not sending message from #{inspect(faddr)} to #{inspect(addr)}",
+        subject: subj
+      )
+
       log_email(email)
       {:ok, "email disabled"}
     end
