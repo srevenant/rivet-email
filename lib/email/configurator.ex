@@ -4,7 +4,10 @@ defmodule Rivet.Email.Configurator do
       use Rivet.Utils.LazyCache
 
       def get_key(a, b), do: Rivet.Email.Configurator.get_key_(__MODULE__, a, b)
+      defoverridable get_key: 2
+
       def get_config(a), do: Rivet.Email.Configurator.get_config_(__MODULE__, a)
+      defoverridable get_config: 1
     end
   end
 
