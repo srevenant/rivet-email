@@ -5,13 +5,13 @@ defmodule Rivet.Email do
   def mailer(), do: Application.get_env(:rivet_email, :mailer)
 
   @type state :: %{
-      this: atom(),
-      from: list(String.t() | atom()),
-      user: module(),
-      email: module(),
-      backend: module(),
-      config: module()
-  }
+          this: atom(),
+          from: list(String.t() | atom()),
+          user: module(),
+          email: module(),
+          backend: module(),
+          config: module()
+        }
 
   # map is the Email or User struct and is validated later
   @type recip :: map()
@@ -27,7 +27,8 @@ defmodule Rivet.Email do
         ) ::
           {:error, String.t()} | {:error, String.t(), list()} | {:ok, results :: list(String.t())}
 
-  def sendto_(state, recips, template, assigns, configs) when is_list(configs) and is_atom(template) do
+  def sendto_(state, recips, template, assigns, configs)
+      when is_list(configs) and is_atom(template) do
     with {:ok, emails} <- get_emails_(state, recips, template, []),
          {:ok, assigns} <- generate_assigns_(state, assigns, configs) do
       send_all_(state, emails, template, assigns, [])
@@ -140,22 +141,18 @@ defmodule Rivet.Email do
   end
 
   ##########################################################################
-  def send_email_(
-        %Swoosh.Email{to: [{_, eaddr} = addr], from: faddr, subject: subj} = email,
-        state
-      ) do
-    if Application.get_env(:rivet_email, :enabled) do
-      if String.ends_with?("@example.com", eaddr) do
-        {:error, :example_email}
-      else
-        Logger.debug("sending email", to: eaddr, from: email.from, subject: subj)
-        # note: Swoosh.deliver returns {:ok, "string"}
-        state.backend.deliver(email)
-      end
-    else
-      Logger.warning(
-        "Email disabled, not sending message from #{inspect(faddr)} to #{inspect(addr)}",
-        subject: subj
+
+  if Application.compile_env(:rivet_email, :enabled) do
+    def send_email_(%Swoosh.Email{} = email, %{backend: backend}) do
+      Logger.debug("sending email", to: email.to, from: email.from, subject: email.subject)
+      backend.deliver(email)
+    end
+  else
+    def send_email_(%Swoosh.Email{} = email, _) do
+      Logger.warning("Email disabled, not sending message",
+        from: email.from,
+        to: email.to,
+        subject: email.subject
       )
 
       log_email(email)
@@ -192,7 +189,7 @@ defmodule Rivet.Email do
     end
   end
 
-  def get_emails_(_, [], _, [_|_] = out), do: {:ok, out}
+  def get_emails_(_, [], _, [_ | _] = out), do: {:ok, out}
 
   def get_emails_(_, [], t, []), do: no_recips(t)
 
