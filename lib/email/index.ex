@@ -4,34 +4,39 @@ defmodule Rivet.Email do
   ##############################################################################
   def mailer(), do: Application.get_env(:rivet_email, :mailer)
 
+  @type state :: %{
+      this: atom(),
+      from: list(String.t() | atom()),
+      user: module(),
+      email: module(),
+      backend: module(),
+      config: module()
+  }
+
+  # map is the Email struct and is validated later
+  @type recip :: map()
+  @type mixed_recip :: String.t() | recip()
+  @type recips :: list(recip())
+  @type mixed_recips :: mixed_recip() | list(mixed_recip())
+  @type template :: module()
+
   @spec sendto_(
-          state :: map(),
-          recips :: map | list(String.t() | map()),
-          atom(),
-          assigns :: keyword(),
+          state(),
+          mixed_recips(),
+          template(),
+          assigns :: keyword() | map(),
           config :: list(String.t())
         ) ::
           {:error, String.t()} | {:error, String.t(), list()} | {:ok, results :: list(String.t())}
-  def sendto_(_state, [], template, _assigns, _configs) do
-    msg = "Cannot send email to no recipients!"
-    Logger.error(msg, template: template)
-    {:error, msg}
-  end
 
-  def sendto_(state, [_ | _] = recips, template, [_ | _] = assigns, [_ | _] = configs)
-      when is_atom(template) do
-    with {:ok, emails} <- get_emails_(state, recips),
+  def sendto_(state, recips, template, assigns, configs) when is_list(configs) and is_atom(template) do
+    with {:ok, emails} <- get_emails_(state, recips, template, []),
          {:ok, assigns} <- generate_assigns_(state, assigns, configs) do
       send_all_(state, emails, template, assigns, [])
     end
   end
 
-  # if they send in a single struct with the defined user type, turn it into a list
-  def sendto_(%{user: user} = state, %user{} = recip, t, a, c),
-    do: sendto_(state, [recip], t, a, c)
-
   ##########################################################################
-  # generate_assigns_ converts a list to a map
   defp send_all_(state, [recip | rest], template, assigns, out) when is_map(assigns) do
     case deliver_(state, recip, template, assigns) do
       {:ok, result} -> send_all_(state, rest, template, assigns, [result | out])
@@ -50,10 +55,10 @@ defmodule Rivet.Email do
   end
 
   ##########################################################################
-  def generate_assigns_(state, assigns, configs) when is_list(assigns) do
+  def generate_assigns_(state, %{} = assigns, configs) do
     with {:ok, cfgs} <-
            Enum.reduce_while(configs, {:ok, %{}}, &reduce_load_config_(state, &1, &2)) do
-      assigns = Map.merge(cfgs, Map.new(assigns))
+      assigns = Map.merge(cfgs, assigns)
 
       case get_in(assigns, assigns[:from_key] || state.from) do
         nil ->
@@ -68,6 +73,9 @@ defmodule Rivet.Email do
       end
     end
   end
+
+  def generate_assigns_(state, assigns, configs) when is_list(assigns),
+    do: generate_assigns_(state, Map.new(assigns), configs)
 
   ##########################################################################
   defp eex_lineno(trace) do
@@ -170,15 +178,17 @@ defmodule Rivet.Email do
 
   ##########################################################################
   # email_recipient() | list(email_recipient)) ::
-  @spec get_emails_(map(), map() | list(map())) ::
-          {:ok, list(map())} | {:error, String.t(), term()}
+  @spec get_emails_(state(), mixed_recips(), template(), recips()) ::
+          {:ok, recips()} | {:error, String.t(), term()}
 
-  def get_emails_(state, recip, out \\ [])
+  # very edge cases
+  def get_emails_(s, ["" | rest], t, [_|_] = out), do: get_emails_(s, rest, t, out)
+  def get_emails_(_, [""], t, []), do: no_recips(t)
 
-  def get_emails_(state, [recip | recips], out) do
+  def get_emails_(state, [recip | recips], t, out) do
     case state.this.get_email(recip) do
       {:ok, email} ->
-        get_emails_(state, recips, [email | out])
+        get_emails_(state, recips, t, [email | out])
 
       {:error, %{reason: :no_email, user: user}} ->
         {:error, "Unable to load email for user, cannot send email", user: user.id}
@@ -188,9 +198,29 @@ defmodule Rivet.Email do
     end
   end
 
-  def get_emails_(_, [], out), do: {:ok, out}
-  def get_emails_(state, recip, out), do: get_emails_(state, [recip], out)
+  def get_emails_(_, [], _, [_|_] = out), do: {:ok, out}
 
+  def get_emails_(_, [], t, []), do: no_recips(t)
+  def get_emails_(_, "", t, []), do: no_recips(t)
+
+  # if they send in a single struct with the defined user type, turn it into a list
+  def get_emails_(%{email: email} = state, %email{} = recip, t, out),
+    do: get_emails_(state, [recip], t, out)
+
+  def get_emails_(%{user: user} = state, %user{} = recip, t, out),
+    do: get_emails_(state, [recip], t, out)
+
+  def get_emails_(state, <<recip::binary>>, t, out),
+    do: get_emails_(state, [recip], t, out)
+
+  ##############
+  defp no_recips(template) do
+    msg = "Cannot send email to no recipient!"
+    Logger.error(msg, template: template)
+    {:error, msg}
+  end
+
+  ##############################################################################
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       @type user_id() :: String.t()
