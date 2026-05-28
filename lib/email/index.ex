@@ -27,7 +27,7 @@ defmodule Rivet.Email do
   end
 
   # if they send in a single struct with the defined user type, turn it into a list
-  def sendto_(%{user} = state, %user{} = recip, t, a, c),
+  def sendto_(%{user: user} = state, %user{} = recip, t, a, c),
     do: sendto_(state, [recip], t, a, c)
 
   ##########################################################################
