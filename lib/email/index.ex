@@ -6,7 +6,7 @@ defmodule Rivet.Email do
 
   @spec sendto_(
           state :: map(),
-          recips :: list(String.t() | map()),
+          recips :: map | list(String.t() | map()),
           atom(),
           assigns :: keyword(),
           config :: list(String.t())
