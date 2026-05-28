@@ -27,7 +27,7 @@ defmodule Rivet.Email.Test do
 
     from = [email_from: "nobody@nobody"]
 
-    assert {:error, "Cannot send email to no recipient!"} =
+    assert {:error, "Cannot send email without recipient!"} =
              Mailer.sendto([], Mailer.Template, from)
 
     assert {:error, "test error", _} =

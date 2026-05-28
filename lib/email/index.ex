@@ -13,16 +13,14 @@ defmodule Rivet.Email do
       config: module()
   }
 
-  # map is the Email struct and is validated later
+  # map is the Email or User struct and is validated later
   @type recip :: map()
-  @type mixed_recip :: String.t() | recip()
-  @type recips :: list(recip())
-  @type mixed_recips :: mixed_recip() | list(mixed_recip())
+  @type recips :: recip() | list(recip())
   @type template :: module()
 
   @spec sendto_(
           state(),
-          mixed_recips(),
+          recips(),
           template(),
           assigns :: keyword() | map(),
           config :: list(String.t())
@@ -178,12 +176,8 @@ defmodule Rivet.Email do
 
   ##########################################################################
   # email_recipient() | list(email_recipient)) ::
-  @spec get_emails_(state(), mixed_recips(), template(), recips()) ::
+  @spec get_emails_(state(), recips(), template(), recips()) ::
           {:ok, recips()} | {:error, String.t(), term()}
-
-  # very edge cases
-  def get_emails_(s, ["" | rest], t, [_|_] = out), do: get_emails_(s, rest, t, out)
-  def get_emails_(_, [""], t, []), do: no_recips(t)
 
   def get_emails_(state, [recip | recips], t, out) do
     case state.this.get_email(recip) do
@@ -201,21 +195,22 @@ defmodule Rivet.Email do
   def get_emails_(_, [], _, [_|_] = out), do: {:ok, out}
 
   def get_emails_(_, [], t, []), do: no_recips(t)
-  def get_emails_(_, "", t, []), do: no_recips(t)
 
-  # if they send in a single struct with the defined user type, turn it into a list
+  # if they send in a single struct with the proper type, turn it into a list
   def get_emails_(%{email: email} = state, %email{} = recip, t, out),
     do: get_emails_(state, [recip], t, out)
 
   def get_emails_(%{user: user} = state, %user{} = recip, t, out),
     do: get_emails_(state, [recip], t, out)
 
-  def get_emails_(state, <<recip::binary>>, t, out),
-    do: get_emails_(state, [recip], t, out)
+  def get_emails_(r, _, t, _) do
+    Logger.error("bad recipient", bad_recip: r)
+    no_recips(t)
+  end
 
   ##############
   defp no_recips(template) do
-    msg = "Cannot send email to no recipient!"
+    msg = "Cannot send email without recipient!"
     Logger.error(msg, template: template)
     {:error, msg}
   end
@@ -226,7 +221,7 @@ defmodule Rivet.Email do
       @type user_id() :: String.t()
       @type email_model() :: @email_model.t()
       @type user_model() :: @user_model.t()
-      @type email_recipient() :: email_model() | user_model() | user_id()
+      @type email_recipient() :: email_model() | user_model()
 
       @from_key Keyword.get(opts, :from_key, [:email_from])
       @user_model Keyword.get(opts, :user_model, Rivet.Ident.User)
@@ -268,11 +263,11 @@ defmodule Rivet.Email do
         end
       end
 
-      def get_email(user_id) when is_binary(user_id) do
-        with {:ok, user} <- @user_model.one(user_id) do
-          get_email(user)
-        end
-      end
+      # def get_email(user_id) when is_binary(user_id) do
+      #   with {:ok, user} <- @user_model.one(user_id) do
+      #     get_email(user)
+      #   end
+      # end
 
       ##########################################################################
       def sendto(recips, template, assigns \\ [], configs \\ []) when is_atom(template),
