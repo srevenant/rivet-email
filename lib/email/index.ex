@@ -26,6 +26,10 @@ defmodule Rivet.Email do
     end
   end
 
+  # if they send in a single struct with the defined user type, turn it into a list
+  def sendto_(%{user} = state, %user{} = recip, t, a, c),
+    do: sendto_(state, [recip], t, a, c)
+
   ##########################################################################
   # generate_assigns_ converts a list to a map
   defp send_all_(state, [recip | rest], template, assigns, out) when is_map(assigns) do
