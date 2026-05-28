@@ -31,12 +31,12 @@ defmodule Rivet.Email.Configurator do
   end
 
   ##########################################################################
-  defp get_config_key_(parent, cfgname, key) when is_list(key) do
+  def get_config_key_(parent, cfgname, key) when is_list(key) do
     with {:ok, cfg} <- get_config__(parent, cfgname),
          do: get_in_(cfg, key)
   end
 
-  defp get_in_(cfg, key) when is_map(cfg) do
+  def get_in_(cfg, key) when is_map(cfg) do
     case get_in(cfg, key) do
       nil -> {:error, :not_found}
       value -> {:ok, value}
