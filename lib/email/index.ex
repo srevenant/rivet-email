@@ -12,7 +12,7 @@ defmodule Rivet.Email do
     {:error, msg}
   end
 
-  def sendto_(state, recips, template, assigns, configs) do
+  def sendto_(state, recips, template, assigns, configs) when is_atom(template) and is_list(assigns) and is_list(configs) do
     with {:ok, emails} <- get_emails_(state, recips),
          {:ok, assigns} <- generate_assigns_(state, assigns, configs) do
       send_all_(state, emails, template, assigns, [])
@@ -20,6 +20,7 @@ defmodule Rivet.Email do
   end
 
   ##########################################################################
+  # generate_assigns_ converts a list to a map
   defp send_all_(state, [recip | rest], template, assigns, out) when is_map(assigns) do
     case deliver_(state, recip, template, assigns) do
       {:ok, result} -> send_all_(state, rest, template, assigns, [result | out])
@@ -38,7 +39,7 @@ defmodule Rivet.Email do
   end
 
   ##########################################################################
-  def generate_assigns_(state, assigns, configs) do
+  def generate_assigns_(state, assigns, configs) when is_list(assigns) do
     with {:ok, cfgs} <-
            Enum.reduce_while(configs, {:ok, %{}}, &reduce_load_config_(state, &1, &2)) do
       assigns = Map.merge(cfgs, Map.new(assigns))
@@ -226,7 +227,7 @@ defmodule Rivet.Email do
       end
 
       ##########################################################################
-      def sendto(recips, template, assigns \\ [], configs \\ []),
+      def sendto(recips, template, assigns \\ [], configs \\ []) when is_atom(template),
         do: Rivet.Email.sendto_(@state, recips, template, assigns, configs)
     end
   end
