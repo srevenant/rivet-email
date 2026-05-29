@@ -8,7 +8,7 @@ defmodule Rivet.Email.Config.Migrations.Base do
       add(:site, :string, null: false)
       add(:group, :string, null: false)
       add(:key, :string, null: false)
-      add(:data, :map, null: false)
+      add(:value, :map, null: false)
       timestamps()
     end
     create(unique_index(:email_configs, [:site, :group, :key]))

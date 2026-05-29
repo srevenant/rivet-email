@@ -5,7 +5,7 @@ defmodule RivetEmail.MixProject do
   def project do
     [
       app: :rivet_email,
-      version: "3.2.0",
+      version: "4.0.0",
       package: package(),
       elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -25,7 +25,7 @@ defmodule RivetEmail.MixProject do
       xref: [exclude: List.wrap(Application.get_env(:rivet, :repo))],
       source_url: @source_url,
       docs: [main: "Rivet.Email"],
-      aliases: [c: "compile"],
+      aliases: aliases(),
       description: description()
     ]
   end
@@ -40,6 +40,16 @@ defmodule RivetEmail.MixProject do
         ]
       ],
       extra_applications: [:logger, {:ex_unit, :optional}]
+    ]
+  end
+
+  defp aliases do
+    [
+      "ecto.migrate": ["rivet migrate"],
+      "ecto.setup": ["ecto.create", "rivet migrate"],
+      "ecto.reset": ["ecto.drop --force-drop -f", "ecto.setup"],
+      test: ["ecto.create --quiet", "rivet migrate", "test"],
+      c: ["compile"]
     ]
   end
 

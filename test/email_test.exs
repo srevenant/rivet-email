@@ -5,7 +5,9 @@ defmodule Rivet.Email.Test do
 
   describe "tests" do
     setup do
-      assert {:ok, _} = Rivet.Email.Template.create(%{name: "//CONFIG/narf", data: "{\"boop\": 1}"})
+      assert {:ok, _} =
+               Rivet.Email.Template.create(%{name: "//CONFIG/narf", data: "{\"boop\": 1}"})
+
       :ok
     end
 
@@ -39,9 +41,14 @@ defmodule Rivet.Email.Test do
     end
 
     test "config" do
-      assert {:error, "no email template for: site"} = Mailer.Configurator.get_key("nope", [:boop])
+      assert {:error, "no email template for: site"} =
+               Mailer.Configurator.get_key("nope", [:boop])
+
       assert {:ok, 1} = Mailer.Configurator.get_key("narf", [:boop])
-      assert {:error, "no email template for: site"} = Mailer.Configurator.get_key("narf", [:nope])
+
+      assert {:error, "no email template for: site"} =
+               Mailer.Configurator.get_key("narf", [:nope])
+
       assert {:ok, %{boop: 1}} = Mailer.Configurator.get_config("narf")
       assert {:ok, s} = Rivet.Email.Template.create(%{name: "//CONFIG/site", data: "{\"no\": 0}"})
       assert {:error, :not_found} = Mailer.Configurator.get_key("site", [:boop])
