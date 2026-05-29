@@ -1,5 +1,5 @@
-ExUnit.start(capture_log: false)
-{:ok, _} = Application.ensure_all_started(:ex_machina)
+# ExUnit.start(capture_log: false)
+# {:ok, _} = Application.ensure_all_started(:ex_machina)
 
 children = [
   {Rivet.Email.Repo, []},
@@ -8,5 +8,13 @@ children = [
 
 Supervisor.start_link(children, strategy: :one_for_one, name: Test.Supervisor)
 
-ExUnit.configure(exclude: [pending: true], formatters: [JUnitFormatter, ExUnit.CLIFormatter])
-Faker.start()
+# ExUnit.configure(exclude: [pending: true], formatters: [JUnitFormatter, ExUnit.CLIFormatter])
+# Faker.start()
+
+ExUnit.start(
+  exclude: [:skip],
+  capture_log: true,
+  formatters: [JUnitFormatter, ExUnit.CLIFormatter]
+)
+
+Ecto.Adapters.SQL.Sandbox.mode(Rivet.Email.Repo, :auto)

@@ -1,4 +1,4 @@
-defmodule Rivet.Ident.Case do
+defmodule Test.Support.Email.Case do
   use ExUnit.CaseTemplate
 
   using do
@@ -6,15 +6,14 @@ defmodule Rivet.Ident.Case do
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import Rivet.Email.Case
+      # import Rivet.Email.Case
       alias Rivet.Email.Repo
       alias Ecto.Changeset
     end
   end
 
   setup tags do
-    opts = tags |> Map.take([:isolation]) |> Enum.to_list()
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Rivet.Email.Repo, opts)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Rivet.Email.Repo, [])
 
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(Rivet.Email.Repo, {:shared, self()})
