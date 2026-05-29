@@ -47,7 +47,7 @@ defmodule Rivet.Email do
 
   ##########################################################################
   defp reduce_load_config_(state, name, {:ok, cfgs}) do
-    case state.config.get_config(name) do
+    case state.config.load_site(name) do
       {:ok, config} -> {:cont, {:ok, Map.merge(cfgs, config)}}
       {:error, e} -> {:halt, {:error, "Email Configuration not found: #{inspect(e)}"}}
     end

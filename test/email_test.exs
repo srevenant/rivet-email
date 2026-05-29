@@ -2,6 +2,8 @@ defmodule Rivet.Email.Test do
   use Test.Support.Email.Case
   import ExUnit.CaptureLog
   alias Rivet.Email.Example.Mailer
+  alias Mailer.Configurator
+  alias Rivet.Email.Config
 
   describe "tests" do
     setup do
@@ -40,20 +42,29 @@ defmodule Rivet.Email.Test do
       assert {:ok, ["test delivered"]} = Mailer.sendto(em, Mailer.Template, from, [])
     end
 
-    test "config" do
-      assert {:error, "no email template for: site"} =
-               Mailer.Configurator.get_key("nope", [:boop])
+      test "config test" do
+        assert [] = Config.all!()
 
-      assert {:ok, 1} = Mailer.Configurator.get_key("narf", [:boop])
+        {:ok, %Config{id: id, site: "", group: "addr", key: "boop", value: "somefin"}} =
+          Config.set("addr", "boop", "somefin")
 
-      assert {:error, "no email template for: site"} =
-               Mailer.Configurator.get_key("narf", [:nope])
+        # change the value and also test list/string email tuples
+        {:ok, %Config{id: ^id, value: ["a", "b"]}} = Config.set("addr", "boop", ["a", "b"])
 
-      assert {:ok, %{boop: 1}} = Mailer.Configurator.get_config("narf")
-      assert {:ok, s} = Rivet.Email.Template.create(%{name: "//CONFIG/site", data: "{\"no\": 0}"})
-      assert {:error, :not_found} = Mailer.Configurator.get_key("site", [:boop])
-      assert {:ok, %{no: 0}} = Mailer.Configurator.get_config("site")
-      Rivet.Email.Template.delete(s)
-    end
+        {:error, %{valid?: false, errors: [value: {"is invalid", _}]}} = Config.set("addr", "boop", 1)
+
+        assert {:error, :not_found} = Configurator.conf("spleen", "boop")
+
+        assert {:ok, %Config{}} = Config.set("spleen", "boop", "sploop")
+
+        assert {:ok, %{value: "sploop"}} = Configurator.conf("spleen", "boop")
+
+        assert {:ok, %{spleen: %{boop: "sploop"}}} = Configurator.load_site("")
+
+        # Config.Migrate.test_data()
+        # Config.Migrate.migrate(Rivet.Email.Repo)
+        #
+        # {:ok, %{}} = Config.load_site("") |>IO.inspect
+      end
   end
 end
