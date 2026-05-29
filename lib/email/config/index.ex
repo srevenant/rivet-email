@@ -24,13 +24,4 @@ defmodule Rivet.Email.Config do
     create: [:site],
     update: [:value],
     unique_constraints: [[:site, :group, :key]]
-
-  # temp
-  def migrate(repo) do
-    from(t in Rivet.Email.Template, where: like("//CONFIG%", t.name))
-    |> repo.all!()
-    |> Enum.each(fn t ->
-      IO.inspect(t)
-    end)
-  end
 end

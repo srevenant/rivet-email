@@ -13,4 +13,10 @@ defmodule Rivet.Email.ConfigTest do
 
     {:error, %{valid?: false, errors: [value: {"is invalid", _}]}} = Config.set("addr", "boop", 1)
   end
+
+  test "migrate" do
+    Config.Migrate.test_data()
+    Config.Migrate.migrate(Rivet.Email.Repo)
+  end
+
 end
