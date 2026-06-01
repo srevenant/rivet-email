@@ -14,7 +14,7 @@ defmodule Test.Rivet.Email.SendTest do
     test "send via template" do
       assert capture_log(fn ->
                assert {:ok, ["test delivered"]} =
-                        Mailer.Template.sendto(Mailer.User.mock(), tester: "testing")
+                        Mailer.Template.template_send(Mailer.User.mock(), tester: "testing")
              end) =~ ~r/Subject: test subject/
     end
 

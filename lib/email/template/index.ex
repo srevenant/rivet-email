@@ -1,14 +1,15 @@
 defmodule Rivet.Email.Template do
   @callback generate(recipient :: map(), attributes :: map()) ::
               {:ok, subject :: String.t(), html_body :: String.t()}
-  @callback template_send(recipients :: any(), assigns :: list()) :: Rivet.Email.sendto_result()
-  @callback template_send(recipients :: any(), assigns :: list(), config :: list()) :: Rivet.Email.sendto_result()
+  @callback template_send(recipients :: any(), assigns :: Rivet.Email.assigns()) :: Rivet.Email.sendto_result()
+  @callback template_send(recipients :: any(), assigns :: Rivet.Email.assigns(), config :: list()) :: Rivet.Email.sendto_result()
 
   use TypedEctoSchema
   use Rivet.Ecto.Model
 
   typed_schema "email_templates" do
-    field(:name, Rivet.Utils.Ecto.Atom)
+    ### big refactor todo: switch to strings
+    field(:name, :string)
     field(:data, :string, default: "")
     timestamps()
   end
@@ -29,10 +30,11 @@ defmodule Rivet.Email.Template do
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
       require Logger
-      @assigns Keyword.get(opts, :assigns, false)
+      @assigns Keyword.get(opts, :assigns, [])
+      @assigns_map Map.new(@assigns)
       @configs Keyword.get(opts, :configs, [""])
       @behaviour Rivet.Email.Template
-      @tname Atom.to_string(__MODULE__)
+      @tname "#{__MODULE__}"
 
       # future: for scale of thousands/second, add a read-through cache with Rivet lazy cache
       def load_and_eval(email, assigns) do
@@ -48,8 +50,8 @@ defmodule Rivet.Email.Template do
         )
       end
 
-      if @assigns do
-        def merge_assigns(assigns), do: Keyword.merge(@assigns, assigns)
+      if map_size(@assigns_map) > 0 do
+        def merge_assigns(assigns), do: Map.merge(@assigns_map, Map.new(assigns))
       else
         def merge_assigns(assigns), do: assigns
       end

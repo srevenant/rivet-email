@@ -18,12 +18,13 @@ defmodule Rivet.Email do
   @type recips :: recip() | list(recip())
   @type template :: module()
   @type sendto_result :: {:error, String.t()} | {:error, String.t(), list()} | {:ok, results :: list(String.t())}
+  @type assigns :: keyword() | map()
 
   @spec sendto_(
           state(),
           recips(),
           template(),
-          assigns :: keyword() | map(),
+          assigns(),
           config :: list(String.t())
         ) :: sendto_result()
 
@@ -39,11 +40,11 @@ defmodule Rivet.Email do
   defp send_all_(state, [recip | rest], template, assigns, out) when is_map(assigns) do
     case deliver_(state, recip, template, assigns) do
       {:ok, result} -> send_all_(state, rest, template, assigns, [result | out])
-      {:error, error} -> {:error, error, [out] |> Enum.reverse()}
+      {:error, error} -> {:error, error, out}
     end
   end
 
-  defp send_all_(_, [], _, _, out), do: {:ok, Enum.reverse(out)}
+  defp send_all_(_, [], _, _, out), do: {:ok, out}
 
   ##########################################################################
   defp reduce_load_config_(state, name, {:ok, cfgs}) do
@@ -200,7 +201,7 @@ defmodule Rivet.Email do
   def get_emails_(%{user: user} = state, %user{} = recip, t, out),
     do: get_emails_(state, [recip], t, out)
 
-  def get_emails_(r, _, t, _) do
+  def get_emails_(_, r, t, _) do
     Logger.error("bad recipient", bad_recip: r)
     no_recips(t)
   end

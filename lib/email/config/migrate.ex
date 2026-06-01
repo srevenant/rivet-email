@@ -6,7 +6,7 @@ defmodule Rivet.Email.Config.Migrate do
     from(t in Rivet.Email.Template, where: like(t.name, "//CONFIG%"))
     |> repo.all()
     |> Enum.each(fn t ->
-      site = t.name |> Atom.to_string() |> String.slice(9..-1//1)
+      site = String.slice("#{t.name}", 9..-1//1)
       site = if site == "site", do: "", else: site
 
       for {group, vals} <- Jason.decode!(t.data) do
