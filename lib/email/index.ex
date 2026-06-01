@@ -29,18 +29,15 @@ defmodule Rivet.Email do
 
   def sendto_(state, recips, template, assigns, configs)
       when is_list(configs) and is_atom(template) do
-    IO.puts("Mailer.sendto_()")
-    with {:ok, emails} <- get_emails_(state, recips, template, []) |> IO.inspect(label: "EMAILS?"),
-         {:ok, assigns} <- generate_assigns_(state, assigns, configs) |> IO.inspect(label: "ASSIGNS?") do
-           IO.puts("sending all")
+    with {:ok, emails} <- get_emails_(state, recips, template, []),
+         {:ok, assigns} <- generate_assigns_(state, assigns, configs) do
       send_all_(state, emails, template, assigns, [])
     end
-    |>IO.inspect(label: "AFTER")
   end
 
   ##########################################################################
   defp send_all_(state, [recip | rest], template, assigns, out) when is_map(assigns) do
-    case deliver_(state, recip, template, assigns) |> IO.inspect(label: "send_all->deliver?") do
+    case deliver_(state, recip, template, assigns) do
       {:ok, result} -> send_all_(state, rest, template, assigns, [result | out])
       {:error, error} -> {:error, error, [out] |> Enum.reverse()}
     end
