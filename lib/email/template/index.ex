@@ -58,7 +58,7 @@ defmodule Rivet.Email.Template do
       def template_send(targets, assigns, configs \\ @configs),
         do: Rivet.Email.mailer().sendto(targets, __MODULE__, merge_assigns(assigns), configs)
 
-      defoverridable sendto: 2, sendto: 3
+      defoverridable template_send: 2, template_send: 3
 
       @impl Rivet.Email.Template
       def generate(email, assigns), do: load_and_eval(email, assigns)
