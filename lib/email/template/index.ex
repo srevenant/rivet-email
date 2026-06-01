@@ -1,7 +1,8 @@
 defmodule Rivet.Email.Template do
   @callback generate(recipient :: map(), attributes :: map()) ::
               {:ok, subject :: String.t(), html_body :: String.t()}
-  @callback sendto(recipients :: any(), assigns :: list()) :: :ok
+  @callback sendto(recipients :: any(), assigns :: list()) :: Rivet.Email.sendto_result()
+  @callback sendto(recipients :: any(), assigns :: list(), config :: list()) :: Rivet.Email.sendto_result()
 
   use TypedEctoSchema
   use Rivet.Ecto.Model
@@ -29,7 +30,7 @@ defmodule Rivet.Email.Template do
     quote location: :keep, bind_quoted: [opts: opts] do
       require Logger
       @assigns Keyword.get(opts, :assigns, false)
-      @configs Keyword.get(opts, :configs, ["site"])
+      @configs Keyword.get(opts, :configs, [""])
       @behaviour Rivet.Email.Template
       @tname Atom.to_string(__MODULE__)
 

@@ -17,6 +17,7 @@ defmodule Rivet.Email do
   @type recip :: map()
   @type recips :: recip() | list(recip())
   @type template :: module()
+  @type sendto_result :: {:error, String.t()} | {:error, String.t(), list()} | {:ok, results :: list(String.t())}
 
   @spec sendto_(
           state(),
@@ -24,8 +25,7 @@ defmodule Rivet.Email do
           template(),
           assigns :: keyword() | map(),
           config :: list(String.t())
-        ) ::
-          {:error, String.t()} | {:error, String.t(), list()} | {:ok, results :: list(String.t())}
+        ) :: sendto_result()
 
   def sendto_(state, recips, template, assigns, configs)
       when is_list(configs) and is_atom(template) do
