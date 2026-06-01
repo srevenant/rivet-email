@@ -21,11 +21,11 @@ defmodule Rivet.Email.Config do
   def load_site(site) do
     with {:ok, list} <- all(site: site) do
       {:ok,
-        Enum.reduce(list, %{}, fn %{group: group, key: key, value: value}, map ->
-          group = String.to_atom(group)
-          key = String.to_atom(key)
-          put_in(map, [Access.key(group, %{}), key], value)
-        end)}
+       Enum.reduce(list, %{}, fn %{group: group, key: key, value: value}, map ->
+         group = String.to_atom(group)
+         key = String.to_atom(key)
+         put_in(map, [Access.key(group, %{}), key], value)
+       end)}
     end
   end
 

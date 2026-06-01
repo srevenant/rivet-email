@@ -12,7 +12,7 @@ defmodule Rivet.Email.Example.Mailer.Email do
   # coveralls-ignore-start
   def preload(e, _), do: {:ok, %{e | user: Mailer.User.mock()}}
   def one(_), do: {:ok, mock()}
-  # coveralls-ignore-end
+  # coveralls-ignore-stop
 
   def mock() do
     %__MODULE__{

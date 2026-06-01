@@ -236,10 +236,8 @@ defmodule Rivet.Email do
         config: @configurator
       }
 
-
-      TODO: figure out the right path to send in alt "site" configuration at runtime and
-      have it cascade properly across all things
-
+      # TODO: figure out the right path to send in alt "site" configuration at runtime and
+      # have it cascade properly across all things
       ##########################################################################
       @spec get_email(email_recipient()) :: {:ok, email_model()} | {:error, reason :: any()}
       def get_email(%@email_model{} = email) do
