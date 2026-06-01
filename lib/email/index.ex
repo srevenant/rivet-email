@@ -35,6 +35,7 @@ defmodule Rivet.Email do
            IO.puts("sending all")
       send_all_(state, emails, template, assigns, [])
     end
+    |>IO.inspect(label: "AFTER")
   end
 
   ##########################################################################
