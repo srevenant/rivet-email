@@ -1,8 +1,8 @@
 defmodule Rivet.Email.Template do
   @callback generate(recipient :: map(), attributes :: map()) ::
               {:ok, subject :: String.t(), html_body :: String.t()}
-  @callback sendto(recipients :: any(), assigns :: list()) :: Rivet.Email.sendto_result()
-  @callback sendto(recipients :: any(), assigns :: list(), config :: list()) :: Rivet.Email.sendto_result()
+  @callback template_send(recipients :: any(), assigns :: list()) :: Rivet.Email.sendto_result()
+  @callback template_send(recipients :: any(), assigns :: list(), config :: list()) :: Rivet.Email.sendto_result()
 
   use TypedEctoSchema
   use Rivet.Ecto.Model
