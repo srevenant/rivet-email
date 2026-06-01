@@ -5,7 +5,8 @@ defmodule Rivet.Email.Configurator do
 
       def conf(grp, key, site \\ "") do
         get_through({site, grp, key}, fn _ ->
-          Rivet.Email.Config.one(site: site, group: grp, key: key)
+          with {:ok, %{value: value}} <- Rivet.Email.Config.one(site: site, group: grp, key: key),
+            do: {:ok, value}
         end)
       end
 

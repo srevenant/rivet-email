@@ -21,7 +21,7 @@ defmodule Test.Rivet.Email.ConfigTest do
 
     assert {:ok, %Config{}} = Config.set("spleen", "boop", "sploop")
 
-    assert {:ok, %{value: "sploop"}} = Configurator.conf("spleen", "boop")
+    assert {:ok, "sploop"} = Configurator.conf("spleen", "boop")
 
     assert {:ok, %{spleen: %{boop: "sploop"}}} = Configurator.load_site("")
   end
