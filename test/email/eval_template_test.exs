@@ -1,5 +1,5 @@
-defmodule Rivet.Email.EvalTemplateTest do
-  use ExUnit.Case
+defmodule Test.Rivet.Email.EvalTemplateTest do
+  use Test.Support.Email.Case
 
   doctest Rivet.Email.Template, import: true
   doctest Rivet.Email.Template.Helpers, import: true

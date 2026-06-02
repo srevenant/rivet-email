@@ -1,10 +1,12 @@
 defmodule Rivet.Email.Example.Mailer.User do
   defstruct id: "", name: "", emails: []
 
+  @type t :: %__MODULE__{id: String.t(), name: String.t(), emails: list()}
+
   # coveralls-ignore-start
   def preload(e, _), do: {:ok, e}
   def one(_), do: {:ok, mock()}
-  # coveralls-ignore-end
+  # coveralls-ignore-stop
 
   def mock() do
     %__MODULE__{

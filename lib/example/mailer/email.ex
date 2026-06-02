@@ -1,10 +1,18 @@
 defmodule Rivet.Email.Example.Mailer.Email do
-  defstruct id: "", address: "", user: %Rivet.Email.Example.Mailer.User{}, verified: true
+  alias Rivet.Email.Example.Mailer
+  defstruct id: "", address: "", user: %Mailer.User{}, verified: true
+
+  @type t :: %__MODULE__{
+          id: String.t(),
+          address: String.t(),
+          user: Mailer.User.t(),
+          verified: boolean()
+        }
 
   # coveralls-ignore-start
-  def preload(e, _), do: {:ok, %{e | user: Rivet.Email.Example.Mailer.User.mock()}}
+  def preload(e, _), do: {:ok, %{e | user: Mailer.User.mock()}}
   def one(_), do: {:ok, mock()}
-  # coveralls-ignore-end
+  # coveralls-ignore-stop
 
   def mock() do
     %__MODULE__{

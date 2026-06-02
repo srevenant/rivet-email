@@ -3,37 +3,24 @@ defmodule Rivet.Email.Configurator do
     quote location: :keep, bind_quoted: [opts: opts] do
       use Rivet.Utils.LazyCache
 
-      @persist_for 600_000
+      def conf(grp, key, site \\ "") do
+        get_through({site, grp, key}, fn _ ->
+          with {:ok, %{value: value}} <- Rivet.Email.Config.one(site: site, group: grp, key: key),
+            do: {:ok, value}
+        end)
+      end
 
-      def get({name, nil}), do: get_(name)
-
-      def get({name, site}) do
-        case get_("#{name}/#{site}") do
-          {:ok, _} = pass -> pass
-          _ -> get_(name)
+      def conf!(grp, key, site \\ "") do
+        case conf(grp, key, site) do
+          {:ok, value} -> value
+          {:error, :not_found} -> raise "email config not found: #{site}.#{grp}.#{key}"
         end
       end
 
-      def get(name), do: get_(name)
-
-      defp get_(name) do
-        case lookup(name) do
-          [{_, target, _}] ->
-            {:ok, target}
-
-          _ ->
-            case Rivet.Email.Template.one(name: "//CONFIG/#{name}") do
-              {:ok, c} ->
-                with {:ok, data} <- Jason.decode(c.data) do
-                  data = Transmogrify.transmogrify(data)
-                  insert(name, data, @persist_for)
-                  {:ok, data}
-                end
-
-              _ ->
-                {:error, :not_found}
-            end
-        end
+      def load_site(site) do
+        get_through(site, fn _ ->
+          Rivet.Email.Config.load_site(site)
+        end)
       end
     end
   end
