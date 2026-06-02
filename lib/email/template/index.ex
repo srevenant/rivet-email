@@ -8,7 +8,6 @@ defmodule Rivet.Email.Template do
   use Rivet.Ecto.Model
 
   typed_schema "email_templates" do
-    ### big refactor todo: switch to strings
     field(:name, :string)
     field(:data, :string, default: "")
     timestamps()
