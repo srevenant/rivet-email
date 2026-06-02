@@ -53,7 +53,7 @@ defmodule Rivet.Email.Template do
       if map_size(@assigns_map) > 0 do
         def merge_assigns(assigns), do: Map.merge(@assigns_map, Map.new(assigns))
       else
-        def merge_assigns(assigns), do: assigns
+        def merge_assigns(assigns), do: Map.new(assigns)
       end
 
       @impl Rivet.Email.Template
