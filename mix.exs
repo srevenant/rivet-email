@@ -5,7 +5,7 @@ defmodule RivetEmail.MixProject do
   def project do
     [
       app: :rivet_email,
-      version: "4.0.0",
+      version: "4.0.1",
       package: package(),
       elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -72,7 +72,6 @@ defmodule RivetEmail.MixProject do
       {:postgrex, "~> 0.21"},
       {:rivet, "~> 2.7"},
       {:swoosh, "~> 1.19"},
-      {:timex, "~> 3.7"},
       {:transmogrify, "~> 2.0.2"}
     ]
   end
