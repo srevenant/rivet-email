@@ -17,6 +17,9 @@ config :rivet_email,
 
 # See Swoosh Mailer docs for more information on this configuration
 config :rivet_email, Rivet.Email.Example.Mailer.Backend, adapter: Rivet.Email.Swoosh.Adapter.Test
+
+config :swoosh, api_client: false
+
 # adapter: Swoosh.Adapters.SMTP
 
 config :ex_unit, capture_log: true

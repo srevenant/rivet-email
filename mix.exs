@@ -66,6 +66,7 @@ defmodule RivetEmail.MixProject do
       {:excoveralls, "~> 0.18", only: :test, runtime: false},
       {:faker, "~> 0.18", only: :test, runtime: false},
       {:gen_smtp, "~> 1.3"},
+      # {:hackney, "~> 1.9", only: :test},
       {:html2markdown, "~> 0.3"},
       {:jason, "~> 1.4"},
       {:mix_test_watch, "~> 1.4", only: [:dev, :test], runtime: false},

@@ -143,13 +143,13 @@ defmodule Rivet.Email do
 
   ##########################################################################
 
-  if Application.compile_env(:rivet_email, :enabled) do
-    def send_email_(%Swoosh.Email{} = email, %{backend: backend}) do
+  def send_email_(%Swoosh.Email{} = email, %{backend: backend}) do
+    # runtime config not compile time, as the same container may be used in
+    # tst/qa and prod, with diff enabled settings
+    if Application.get_env(:rivet_email, :enabled) do
       Logger.debug("sending email", to: email.to, from: email.from, subject: email.subject)
       backend.deliver(email)
-    end
-  else
-    def send_email_(%Swoosh.Email{} = email, _) do
+    else
       Logger.warning("Email disabled, not sending message",
         from: email.from,
         to: email.to,
