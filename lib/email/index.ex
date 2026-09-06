@@ -17,7 +17,8 @@ defmodule Rivet.Email do
   @type recip :: map()
   @type recips :: recip() | list(recip())
   @type template :: module()
-  @type sendto_result :: {:error, String.t()} | {:error, String.t(), list()} | {:ok, results :: list(String.t())}
+  @type sendto_result ::
+          {:error, String.t()} | {:error, String.t(), list()} | {:ok, results :: list(String.t())}
   @type assigns :: keyword() | map()
 
   @spec sendto_(
@@ -226,6 +227,9 @@ defmodule Rivet.Email do
       @email_model Keyword.get(opts, :email_model, Rivet.Ident.Email)
       @backend Keyword.get(opts, :backend)
       @configurator Keyword.get(opts, :configurator)
+      # :any (original behavior) or :email (only emails)
+      @allow_recips Keyword.get(opts, :allow_recips, :any)
+
       require Logger
 
       @state %{
@@ -270,9 +274,20 @@ defmodule Rivet.Email do
       # end
 
       ##########################################################################
-      # configs=[""] is "default site" configuration
-      def sendto(recips, template, assigns \\ [], configs \\ [""]) when is_atom(template),
-        do: Rivet.Email.sendto_(@state, recips, template, assigns, configs)
+      cond do
+        # original behavior
+        @allow_recips == :any ->
+          def sendto(recips, template, assigns \\ [], configs \\ [""]) when is_atom(template),
+            do: Rivet.Email.sendto_(@state, recips, template, assigns, configs)
+
+        @allow_recips == :email ->
+          def sendto(recip = %@email_model{}, template, assigns \\ [], configs \\ [""])
+              when is_atom(template),
+              do: Rivet.Email.sendto_(@state, recip, template, assigns, configs)
+
+        true ->
+          raise "Mis-configured Rivet.Email, must be allow_recips: :any or :email"
+      end
     end
   end
 end
