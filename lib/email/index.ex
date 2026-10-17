@@ -60,8 +60,9 @@ defmodule Rivet.Email do
     with {:ok, cfgs} <-
            Enum.reduce_while(configs, {:ok, %{}}, &reduce_load_config_(state, &1, &2)) do
       assigns = Map.merge(cfgs, assigns)
+      from_key = Enum.map(assigns[:from_key] || state.from, &Transmogrify.As.as_atom!/1)
 
-      case get_in(assigns, assigns[:from_key] || state.from) do
+      case get_in(assigns, from_key) do
         nil ->
           {:error,
            "Sender email address is missing from assigns (@#{Enum.join(state.from, ".")})"}
